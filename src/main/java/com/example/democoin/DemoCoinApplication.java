@@ -1,8 +1,11 @@
 package com.example.democoin;
 
+import com.example.democoin.configuration.properties.UpbitProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+@EnableConfigurationProperties({UpbitProperties.class})
 @SpringBootApplication
 public class DemoCoinApplication {
 

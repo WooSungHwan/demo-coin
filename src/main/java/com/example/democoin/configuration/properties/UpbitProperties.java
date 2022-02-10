@@ -1,4 +1,4 @@
-package com.example.democoin;
+package com.example.democoin.configuration.properties;
 
 
 import lombok.AllArgsConstructor;
