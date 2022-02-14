@@ -39,7 +39,7 @@ public class UpbitAssetClient {
 
             URI uri = URI.create(upbitProperties.getServerUrl() + "/v1/accounts");
 
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, new org.springframework.http.HttpEntity(httpHeaders), String.class);
+            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, new HttpEntity(httpHeaders), String.class);
             if(response.getStatusCode() != HttpStatus.OK) {
                 throw new Exception("StatusCode = " + response.getStatusCode().value());
             }
