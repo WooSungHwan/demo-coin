@@ -77,7 +77,7 @@ class DemoCoinApplicationTests {
     }
 
     private void 주문예제() throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        주문하기(null, "6000", BID); // 6000KRW 매수 후
+        주문하기("KRW-BTC", null, "6000", BID, 1d); // 6000KRW 매수 후
 
         List<AccountsResult> accountsResults = 전체계좌조회();
         Optional<String> btcBalance = accountsResults.stream()
@@ -86,69 +86,12 @@ class DemoCoinApplicationTests {
                 .findFirst();
 
         if (btcBalance.isPresent()) {
-            주문하기(btcBalance.get(), null, ASK); // 전량 매도
+            주문하기("KRW-BTC", btcBalance.get(), null, ASK, 1d); // 전량 매도
         }
     }
 
-    private void 주문하기(String volume, String price, OrdSideType ordSideType) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-//        double halfPercent = 0.5; // 절반매도
-//        double quarterPercent = 0.25;// 25% 매도
-//        double tenPercent = 0.1;
-
-        HashMap<String, String> params = new HashMap<>();
-        params.put("market", "KRW-BTC");
-        params.put("side", ordSideType.getType());
-        switch (ordSideType) {
-            case ASK:
-                // 매도
-                params.put("volume", volume); // 매도수량 필수
-                params.put("ord_type", OrdType.MARKET.getType()); // 시장가 매도
-                break;
-            case BID:
-                // 매수
-                params.put("price", price); // 매수 가격
-                params.put("ord_type", OrdType.PRICE.getType()); // 시장가 매수
-                break;
-            default:
-                return;
-        }
-
-        ArrayList<String> queryElements = new ArrayList<>();
-        for(Map.Entry<String, String> entity : params.entrySet()) {
-            queryElements.add(entity.getKey() + "=" + entity.getValue());
-        }
-
-        String queryString = String.join("&", queryElements.toArray(new String[0]));
-
-        MessageDigest md = MessageDigest.getInstance("SHA-512");
-        md.update(queryString.getBytes("UTF-8"));
-
-        String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
-
-        Algorithm algorithm = Algorithm.HMAC256(secretKey);
-        String jwtToken = JWT.create()
-                .withClaim("access_key", accessKey)
-                .withClaim("nonce", UUID.randomUUID().toString())
-                .withClaim("query_hash", queryHash)
-                .withClaim("query_hash_alg", "SHA512")
-                .sign(algorithm);
-
-        String authenticationToken = "Bearer " + jwtToken;
-
-        try {
-            HttpClient client = HttpClientBuilder.create().build();
-            HttpPost request = new HttpPost(serverUrl + "/v1/orders");
-            request.setHeader("Content-Type", "application/json");
-            request.addHeader("Authorization", authenticationToken);
-            request.setEntity(new StringEntity(JsonUtil.toJson(params)));
-
-            HttpResponse response = client.execute(request);
-            HttpEntity entity = response.getEntity();
-
-            System.out.println(EntityUtils.toString(entity, "UTF-8"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void 주문하기(String market, String volume, String price, OrdSideType ordSideType, Double percent) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        upbitOrderClient.order(market, ordSideType, volume, price);
     }
 
     private List<AccountsResult> 전체계좌조회() {
