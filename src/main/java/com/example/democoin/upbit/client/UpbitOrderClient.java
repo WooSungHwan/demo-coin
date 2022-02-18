@@ -1,4 +1,4 @@
-package com.example.democoin.upbit;
+package com.example.democoin.upbit.client;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

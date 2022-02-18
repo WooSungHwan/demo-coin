@@ -1,12 +1,13 @@
 package com.example.democoin;
 
+import com.example.democoin.configuration.enums.EnumInterface;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.codec.binary.StringUtils;
 
 @Getter
 @AllArgsConstructor
-public enum MarketUnit {
+public enum MarketUnit implements EnumInterface {
 
     KRW("KRW", "원화"),
     BTC("BTC", "비트코인"),

@@ -1,4 +1,4 @@
-package com.example.democoin.upbit;
+package com.example.democoin.upbit.client;
 
 import com.example.democoin.MarketUnit;
 import com.example.democoin.configuration.properties.UpbitProperties;
