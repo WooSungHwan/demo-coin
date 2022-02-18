@@ -6,6 +6,7 @@ import com.example.democoin.configuration.properties.UpbitProperties;
 import com.example.democoin.upbit.client.UpbitAllMarketClient;
 import com.example.democoin.upbit.client.UpbitAssetClient;
 import com.example.democoin.upbit.client.UpbitOrderClient;
+import com.example.democoin.upbit.enums.OrdSideType;
 import com.example.democoin.upbit.result.AccountsResult;
 import com.example.democoin.upbit.result.MarketOrderableResult;
 import com.example.democoin.upbit.result.MarketResult;
@@ -28,9 +29,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-import static com.example.democoin.MarketUnit.*;
-import static com.example.democoin.OrdSideType.ASK;
-import static com.example.democoin.OrdSideType.BID;
+import static com.example.democoin.upbit.enums.MarketUnit.*;
+import static com.example.democoin.upbit.enums.OrdSideType.ASK;
+import static com.example.democoin.upbit.enums.OrdSideType.BID;
 
 @SpringBootTest
 class DemoCoinApplicationTests {

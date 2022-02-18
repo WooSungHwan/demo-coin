@@ -1,16 +1,11 @@
 package com.example.democoin.upbit.client;
 
-import com.example.democoin.MarketUnit;
+import com.example.democoin.upbit.enums.MarketUnit;
 import com.example.democoin.configuration.properties.UpbitProperties;
 import com.example.democoin.upbit.result.MarketResult;
 import com.example.democoin.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;

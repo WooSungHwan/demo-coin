@@ -1,4 +1,4 @@
-package com.example.democoin;
+package com.example.democoin.upbit.enums;
 
 import com.example.democoin.configuration.enums.EnumInterface;
 import lombok.AllArgsConstructor;
