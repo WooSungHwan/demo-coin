@@ -10,7 +10,11 @@ import com.example.democoin.upbit.enums.OrdSideType;
 import com.example.democoin.upbit.result.AccountsResult;
 import com.example.democoin.upbit.result.MarketOrderableResult;
 import com.example.democoin.upbit.result.MarketResult;
+import com.example.democoin.upbit.result.candles.MinuteCandle;
 import com.example.democoin.utils.JsonUtil;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -60,13 +64,32 @@ class DemoCoinApplicationTests {
     }
 
     @Test
-    void contextLoads() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    void contextLoads() throws IOException {
 //        List<AccountsResult> accountsResults = 전체계좌조회();
 //        주문가능정보();
 //        개별주문조회();
 //        주문목록조회();
 //        전체종목조회();
-        주문예제();
+//        주문예제();
+
+        일분봉예제();
+    }
+
+    private void 일분봉예제() throws IOException {
+        OkHttpClient client = new OkHttpClient();
+
+        // 날짜없으면 가장 최근 캔들
+        Request request = new Request.Builder()
+                .url(serverUrl + "/v1/candles/minutes/1?market=KRW-BTC&count=1")
+                .get()
+                .addHeader("Accept", "application/json")
+                .build();
+
+        Response response = client.newCall(request).execute();
+        String json = response.body().string();
+        System.out.println(json);
+        List<MinuteCandle> minuteCandles = JsonUtil.listFromJson(json, MinuteCandle.class);
+        System.out.println(JsonUtil.toJson(minuteCandles));
     }
 
     private void 전체종목조회() {
