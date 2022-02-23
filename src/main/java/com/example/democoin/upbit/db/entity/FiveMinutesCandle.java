@@ -7,8 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static javax.persistence.GenerationType.IDENTITY;
@@ -34,6 +32,9 @@ public class FiveMinutesCandle {
     @Id
     @GeneratedValue(strategy = IDENTITY)
     private Long id;
+
+    @Column(name = "market", length = 10)
+    private String market;
 
     @Column(name = "candle_date_time_utc")
     private LocalDateTime candleDateTimeUtc;                // 캔들 생성 UTC 시간
@@ -63,6 +64,7 @@ public class FiveMinutesCandle {
 
     public static FiveMinutesCandle of(MinuteCandle candle) {
         return new FiveMinutesCandle(null,
+                candle.getMarket(),
                 candle.getCandleDateTimeUtc(),
                 candle.getCandleDateTimeKst(),
                 candle.getOpeningPrice(),
