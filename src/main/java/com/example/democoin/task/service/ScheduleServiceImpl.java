@@ -1,4 +1,4 @@
-package com.example.democoin;
+package com.example.democoin.task.service;
 
 import com.example.democoin.upbit.client.UpbitCandleClient;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
