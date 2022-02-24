@@ -3,6 +3,8 @@ package com.example.democoin;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.example.democoin.configuration.properties.UpbitProperties;
+import com.example.democoin.indicator.EMA;
+import com.example.democoin.indicator.RSI;
 import com.example.democoin.upbit.client.UpbitAllMarketClient;
 import com.example.democoin.upbit.client.UpbitAssetClient;
 import com.example.democoin.upbit.client.UpbitCandleClient;
@@ -15,10 +17,6 @@ import com.example.democoin.upbit.result.MarketOrderableResult;
 import com.example.democoin.upbit.result.MarketResult;
 import com.example.democoin.upbit.result.candles.MinuteCandle;
 import com.example.democoin.utils.JsonUtil;
-import com.example.democoin.utils.LocalDateTimeUtil;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -30,19 +28,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.transaction.Transactional;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.example.democoin.upbit.enums.MarketUnit.*;
+import static com.example.democoin.upbit.enums.MarketUnit.KRW;
 import static com.example.democoin.upbit.enums.OrdSideType.ASK;
 import static com.example.democoin.upbit.enums.OrdSideType.BID;
 
@@ -89,36 +84,30 @@ class DemoCoinApplicationTests {
 //        전체종목조회();
 //        주문예제();
 
-//        오늘_가장최근수집된일자_수집();
+        오늘_가장최근수집된일자_수집();
 //        오늘_최초캔들생성일자_수집();
+/*
+        double[] bitcoins = fiveMinutesCandleRepository.findFiveMinutesCandlesByLimit(500);
+        RSI rsi = new RSI(14);
+        double[] count = rsi.count(bitcoins);
+
+        EMA ema = new EMA(5);
+        double[] emas = new double[bitcoins.length];
+        ema.count(bitcoins, 0, emas);
+        System.out.println();
+ */
     }
 
-    private void 오늘_가장최근수집된일자_수집() throws IOException, InterruptedException {
-        int size = 0;
-        LocalDateTime nextTo = LocalDateTime.now();
-        boolean flag = true;
-        while (flag) {
-            long start = System.currentTimeMillis();
+    @Autowired
+    private ScheduleService scheduleService;
 
-            List<MinuteCandle> minuteCandles = 분봉(5, "KRW-BTC", 200, nextTo);
-            for (MinuteCandle candle : minuteCandles) {
-                if (!fiveMinutesCandleRepository.existsByTimestamp(candle.getTimestamp())) {
-                    fiveMinutesCandleRepository.save(FiveMinutesCandle.of(candle));
-                    size ++;
-                } else {
-                    flag = false;
-                    break;
-                }
-            }
-            long end = System.currentTimeMillis();
-            System.out.printf("========== %s초 =========== 사이즈 : %s\r\n", (end - start) / 1000.0, size);
-            Thread.sleep(100);
-        }
+    private void 오늘_가장최근수집된일자_수집() throws Exception {
+        scheduleService.collectGetCoinFiveMinutesCandles();
     }
 
     private void 오늘_최초캔들생성일자_수집() throws IOException, InterruptedException {
         int size = 0;
-        LocalDateTime nextTo = LocalDateTime.now();
+        LocalDateTime nextTo = LocalDateTime.now().minusMinutes(5);;
         while (true) {
             long start = System.currentTimeMillis();
             List<MinuteCandle> minuteCandles = 분봉(5, "KRW-BTC", 200, nextTo);

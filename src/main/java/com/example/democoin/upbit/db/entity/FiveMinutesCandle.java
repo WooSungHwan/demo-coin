@@ -43,24 +43,24 @@ public class FiveMinutesCandle {
     private LocalDateTime candleDateTimeKst;                // 캔들 생성 KST 시간
 
     @Column(name = "opening_price")
-    private Double openingPrice;                        // 시가
+    private Double openingPrice;                            // 시가
 
     @Column(name = "high_price")
-    private Double highPrice;                           // 고가
+    private Double highPrice;                               // 고가
 
     @Column(name = "low_price")
-    private Double lowPrice;                            // 저가
+    private Double lowPrice;                                // 저가
 
     @Column(name = "trade_price")
-    private Double tradePrice;                          // 종가
+    private Double tradePrice;                              // 종가
 
     private Long timestamp;                                 // 해당 캔들에서 마지막 틱이 저장된 시각
 
     @Column(name = "candle_acc_trade_price")
-    private Double candleAccTradePrice;                 // 누적 거래 금액
+    private Double candleAccTradePrice;                     // 누적 거래 금액
 
     @Column(name = "candle_acc_trade_volume")
-    private Double candleAccTradeVolume;                // 누적 거래량
+    private Double candleAccTradeVolume;                    // 누적 거래량
 
     public static FiveMinutesCandle of(MinuteCandle candle) {
         return new FiveMinutesCandle(null,
