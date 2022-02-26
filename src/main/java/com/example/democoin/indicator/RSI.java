@@ -53,7 +53,8 @@ public class RSI {
             // count RSI with RSI recursive formula
             rsis = new double[emaLength];
             for (int i = 0; i < rsis.length; i++) {
-                rsis[i] = 100 - (100 / (double) (1 + emus[i] / emds[i]));
+                double val = 100 - (100 / (double) (1 + emus[i] / emds[i]));
+                rsis[i] = new BigDecimal(val).setScale(2, RoundingMode.HALF_UP).doubleValue();
             }
         }
 
