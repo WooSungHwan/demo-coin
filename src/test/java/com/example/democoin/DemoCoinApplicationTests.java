@@ -11,10 +11,15 @@ import com.example.democoin.upbit.client.UpbitOrderClient;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.db.repository.FiveMinutesCandleRepository;
 import com.example.democoin.upbit.enums.OrdSideType;
-import com.example.democoin.upbit.result.AccountsResult;
-import com.example.democoin.upbit.result.MarketOrderableResult;
-import com.example.democoin.upbit.result.MarketResult;
+import com.example.democoin.upbit.enums.OrderState;
+import com.example.democoin.upbit.request.OrderCancelRequest;
+import com.example.democoin.upbit.request.OrderListRequest;
+import com.example.democoin.upbit.result.accounts.AccountsResult;
 import com.example.democoin.upbit.result.candles.MinuteCandle;
+import com.example.democoin.upbit.result.market.MarketResult;
+import com.example.democoin.upbit.result.orders.MarketOrderableResult;
+import com.example.democoin.upbit.result.orders.OrderCancelResult;
+import com.example.democoin.upbit.result.orders.OrderResult;
 import com.example.democoin.utils.JsonUtil;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -79,23 +84,30 @@ class DemoCoinApplicationTests {
 //        List<AccountsResult> accountsResults = 전체계좌조회();
 //        주문가능정보();
 //        개별주문조회();
-//        주문목록조회();
+        주문목록조회();
 //        전체종목조회();
 //        주문예제();
 
-        오늘_가장최근수집된일자_수집();
+//        오늘_가장최근수집된일자_수집();
 //        오늘_최초캔들생성일자_수집();
 /*
-        double[] bitcoins = fiveMinutesCandleRepository.findFiveMinutesCandlesByLimit(500);
+        double[] bitcoins = {4600000}; //fiveMinutesCandleRepository.findFiveMinutesCandlesByLimit(500);
         RSI rsi = new RSI(14);
-        double[] count = rsi.count(bitcoins);
-
-        EMA ema = new EMA(5);
-        double[] emas = new double[bitcoins.length];
-        ema.count(bitcoins, 0, emas);
+        double[] count = rsi.count(bitcoins); //
         System.out.println();
- */
+*/
+
+
     }
+/*
+
+    5분봉 수집
+    백테스팅 시 5분봉 1칸 증가 -> rsi 계산 시도
+    -> 불가 -> 매매 안함.
+    -> 가능 -> rsi 계산
+
+*/
+
 
     @Autowired
     private ScheduleService scheduleService;
@@ -161,53 +173,21 @@ class DemoCoinApplicationTests {
         System.out.println(JsonUtil.toJson(result));
     }
 
-    private void 주문목록조회() throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        HashMap<String, String> params = new HashMap<>();
-        params.put("state", "wait");
+    private void 주문목록조회() {
+        OrderListRequest orderRequest = OrderListRequest.builder()
+                .state(OrderState.WAIT)
+                .build();
 
-//        String[] uuids = {
-//                "9ca023a5-851b-4fec-9f0a-48cd83c2eaae"
-//                 ...
-//        };
+        List<OrderResult> orderList = upbitOrderClient.getOrderListInfo(orderRequest);
+        System.out.println(orderList);
+    }
 
-        ArrayList<String> queryElements = new ArrayList<>();
-        for(Map.Entry<String, String> entity : params.entrySet()) {
-            queryElements.add(entity.getKey() + "=" + entity.getValue());
-        }
-//        for(String uuid : uuids) {
-//            queryElements.add("uuids[]=" + uuid);
-//        }
-
-        String queryString = String.join("&", queryElements.toArray(new String[0]));
-
-        MessageDigest md = MessageDigest.getInstance("SHA-512");
-        md.update(queryString.getBytes("UTF-8"));
-
-        String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
-
-        Algorithm algorithm = Algorithm.HMAC256(secretKey);
-        String jwtToken = JWT.create()
-                .withClaim("access_key", accessKey)
-                .withClaim("nonce", UUID.randomUUID().toString())
-                .withClaim("query_hash", queryHash)
-                .withClaim("query_hash_alg", "SHA512")
-                .sign(algorithm);
-
-        String authenticationToken = "Bearer " + jwtToken;
-
-        try {
-            HttpClient client = HttpClientBuilder.create().build();
-            HttpGet request = new HttpGet(serverUrl + "/v1/orders?" + queryString);
-            request.setHeader("Content-Type", "application/json");
-            request.addHeader("Authorization", authenticationToken);
-
-            HttpResponse response = client.execute(request);
-            HttpEntity entity = response.getEntity();
-
-            System.out.println(EntityUtils.toString(entity, "UTF-8"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void 주문취소() throws Exception {
+        OrderCancelRequest orderCancelRequest = OrderCancelRequest.builder()
+                .uuid("cdd92199-2897-4e14-9448-f923320408ad")
+                .build();
+        OrderCancelResult orderCancelResult = upbitOrderClient.orderCancel(orderCancelRequest);
+        System.out.println(orderCancelResult);
     }
 
     private void 개별주문조회() throws NoSuchAlgorithmException, UnsupportedEncodingException {

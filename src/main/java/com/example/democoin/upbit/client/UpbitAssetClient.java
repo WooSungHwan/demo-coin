@@ -2,7 +2,7 @@ package com.example.democoin.upbit.client;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.example.democoin.upbit.result.AccountsResult;
+import com.example.democoin.upbit.result.accounts.AccountsResult;
 import com.example.democoin.configuration.properties.UpbitProperties;
 import com.example.democoin.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;

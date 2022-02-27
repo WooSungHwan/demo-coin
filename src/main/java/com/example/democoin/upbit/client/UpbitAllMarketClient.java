@@ -2,7 +2,7 @@ package com.example.democoin.upbit.client;
 
 import com.example.democoin.upbit.enums.MarketUnit;
 import com.example.democoin.configuration.properties.UpbitProperties;
-import com.example.democoin.upbit.result.MarketResult;
+import com.example.democoin.upbit.result.market.MarketResult;
 import com.example.democoin.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

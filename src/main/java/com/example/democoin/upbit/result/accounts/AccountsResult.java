@@ -1,4 +1,4 @@
-package com.example.democoin.upbit.result;
+package com.example.democoin.upbit.result.accounts;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
