@@ -1,6 +1,7 @@
 package com.example.democoin.upbit.enums;
 
 import com.example.democoin.configuration.enums.EnumInterface;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -14,4 +15,12 @@ public enum OrdType implements EnumInterface {
     private String type;
     private String name;
 
+    public static OrdType find(String type) {
+        return EnumInterface.find(type, values());
+    }
+
+    @JsonCreator
+    public static OrdType findToNull(String type) {
+        return EnumInterface.findToNull(type, values());
+    }
 }

@@ -1,13 +1,12 @@
 package com.example.democoin.upbit.request;
 
 import com.example.democoin.upbit.enums.OrderByType;
-import com.example.democoin.upbit.enums.OrderState;
+import com.example.democoin.upbit.enums.OrderStateType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +21,8 @@ public class OrderListRequest {
     private String market; // 마켓 아이디
     private List<String> uuids; // 주문 UUID의 목록
     private List<String> identifiers; // 주문 identifier의 목록
-    private OrderState state; // 주문 상태
-    private List<OrderState> states; // //미체결 주문(wait, watch)과 완료 주문(done, cancel)을 혼합하여 조회하실 수 없습니다.
+    private OrderStateType state; // 주문 상태
+    private List<OrderStateType> states; // //미체결 주문(wait, watch)과 완료 주문(done, cancel)을 혼합하여 조회하실 수 없습니다.
     @Builder.Default
     private Integer page = 1;
     @Builder.Default

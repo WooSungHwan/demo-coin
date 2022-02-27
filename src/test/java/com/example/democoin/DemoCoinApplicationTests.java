@@ -11,7 +11,7 @@ import com.example.democoin.upbit.client.UpbitOrderClient;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.db.repository.FiveMinutesCandleRepository;
 import com.example.democoin.upbit.enums.OrdSideType;
-import com.example.democoin.upbit.enums.OrderState;
+import com.example.democoin.upbit.enums.OrderStateType;
 import com.example.democoin.upbit.request.OrderCancelRequest;
 import com.example.democoin.upbit.request.OrderListRequest;
 import com.example.democoin.upbit.result.accounts.AccountsResult;
@@ -84,10 +84,10 @@ class DemoCoinApplicationTests {
 //        List<AccountsResult> accountsResults = 전체계좌조회();
 //        주문가능정보();
 //        개별주문조회();
-        주문목록조회();
 //        전체종목조회();
 //        주문예제();
-
+//        List<OrderResult> orderList = 주문목록조회();
+//        주문취소(orderList.get(0).getUuid());
 //        오늘_가장최근수집된일자_수집();
 //        오늘_최초캔들생성일자_수집();
 /*
@@ -173,18 +173,18 @@ class DemoCoinApplicationTests {
         System.out.println(JsonUtil.toJson(result));
     }
 
-    private void 주문목록조회() {
+    private List<OrderResult> 주문목록조회() {
         OrderListRequest orderRequest = OrderListRequest.builder()
-                .state(OrderState.WAIT)
+                .state(OrderStateType.WAIT)
                 .build();
 
         List<OrderResult> orderList = upbitOrderClient.getOrderListInfo(orderRequest);
-        System.out.println(orderList);
+        return orderList;
     }
 
-    private void 주문취소() throws Exception {
+    private void 주문취소(String uuid) throws Exception {
         OrderCancelRequest orderCancelRequest = OrderCancelRequest.builder()
-                .uuid("cdd92199-2897-4e14-9448-f923320408ad")
+                .uuid(uuid)
                 .build();
         OrderCancelResult orderCancelResult = upbitOrderClient.orderCancel(orderCancelRequest);
         System.out.println(orderCancelResult);
