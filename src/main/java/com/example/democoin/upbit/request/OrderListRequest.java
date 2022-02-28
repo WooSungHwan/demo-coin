@@ -17,7 +17,6 @@ import static com.example.democoin.upbit.enums.OrderByType.ASC;
 @Builder
 @Data
 public class OrderListRequest {
-
     private String market; // 마켓 아이디
     private List<String> uuids; // 주문 UUID의 목록
     private List<String> identifiers; // 주문 identifier의 목록

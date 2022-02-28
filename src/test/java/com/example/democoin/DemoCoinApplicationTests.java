@@ -12,6 +12,7 @@ import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.db.repository.FiveMinutesCandleRepository;
 import com.example.democoin.upbit.enums.OrdSideType;
 import com.example.democoin.upbit.enums.OrderStateType;
+import com.example.democoin.upbit.request.MarketOrderableRequest;
 import com.example.democoin.upbit.request.OrderCancelRequest;
 import com.example.democoin.upbit.request.OrderListRequest;
 import com.example.democoin.upbit.result.accounts.AccountsResult;
@@ -49,6 +50,9 @@ import static com.example.democoin.upbit.enums.OrdSideType.BID;
 class DemoCoinApplicationTests {
 
     @Autowired
+    private ScheduleService scheduleService;
+
+    @Autowired
     private UpbitProperties upbitProperties;
 
     @Autowired
@@ -82,13 +86,14 @@ class DemoCoinApplicationTests {
     void contextLoads() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 //        List<AccountsResult> accountsResults = 전체계좌조회();
-//        주문가능정보();
+//        MarketOrderableResult marketOrderableResult = 주문가능정보();
+//        System.out.println(JsonUtil.toJson(marketOrderableResult));
 //        개별주문조회();
 //        전체종목조회();
 //        주문예제();
 //        List<OrderResult> orderList = 주문목록조회();
 //        주문취소(orderList.get(0).getUuid());
-//        오늘_가장최근수집된일자_수집();
+        오늘_가장최근수집된일자_수집();
 //        오늘_최초캔들생성일자_수집();
 /*
         double[] bitcoins = {4600000}; //fiveMinutesCandleRepository.findFiveMinutesCandlesByLimit(500);
@@ -96,21 +101,14 @@ class DemoCoinApplicationTests {
         double[] count = rsi.count(bitcoins); //
         System.out.println();
 */
-
-
-    }
 /*
-
-    5분봉 수집
-    백테스팅 시 5분봉 1칸 증가 -> rsi 계산 시도
-    -> 불가 -> 매매 안함.
-    -> 가능 -> rsi 계산
-
+    매수 스케줄 조건
+        - 한 종목을 전체 금액의 20% 이상 매수 금지
+        -
+    매도 스케줄
+        -
 */
-
-
-    @Autowired
-    private ScheduleService scheduleService;
+    }
 
     private void 오늘_가장최근수집된일자_수집() throws Exception {
         scheduleService.collectGetCoinFiveMinutesCandles();
@@ -168,9 +166,11 @@ class DemoCoinApplicationTests {
         return results;
     }
 
-    private void 주문가능정보() {
-        MarketOrderableResult result = upbitOrderClient.getMargetOrderableInfo();
-        System.out.println(JsonUtil.toJson(result));
+    private MarketOrderableResult 주문가능정보() {
+        MarketOrderableRequest request = MarketOrderableRequest.builder()
+                .market("KRW-BTC")
+                .build();
+        return upbitOrderClient.getMargetOrderableInfo(request);
     }
 
     private List<OrderResult> 주문목록조회() {

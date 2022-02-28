@@ -2,6 +2,7 @@ package com.example.democoin.upbit.client;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.example.democoin.upbit.request.MarketOrderableRequest;
 import com.example.democoin.upbit.request.OrderCancelRequest;
 import com.example.democoin.upbit.result.orders.OrderCancelResult;
 import com.example.democoin.upbit.request.OrderListRequest;
@@ -48,20 +49,10 @@ public class UpbitOrderClient {
     /**
      * 마켓별 주문 가능 정보를 확인한다.
      */
-    public MarketOrderableResult getMargetOrderableInfo() {
+    public MarketOrderableResult getMargetOrderableInfo(MarketOrderableRequest marketOrderableRequest) {
         try {
-            HashMap<String, String> params = new HashMap<>();
-            params.put("market", "KRW-BTC");
-
-            ArrayList<String> queryElements = new ArrayList<>();
-            for(Map.Entry<String, String> entity : params.entrySet()) {
-                queryElements.add(entity.getKey() + "=" + entity.getValue());
-            }
-
-            String queryString = String.join("&", queryElements.toArray(new String[0]));
-            MessageDigest md = getMessageDigest(queryString);
-            String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
-            String jwtToken = makeJWT(queryHash);
+            String queryString = marketOrderableRequest.toQueryString();
+            String jwtToken = generateToken(queryString);
 
             URI uri = URI.create(properties.getServerUrl() + "/v1/orders/chance?" + queryString);
 
@@ -86,6 +77,13 @@ public class UpbitOrderClient {
         return null;
     }
 
+    private String generateToken(String queryString) throws NoSuchAlgorithmException {
+        MessageDigest md = getMessageDigest(queryString);
+        String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
+        String jwtToken = makeJWT(queryHash);
+        return jwtToken;
+    }
+
     /**
      * 주문 리스트 조회
      * @param orderRequest
@@ -93,32 +91,28 @@ public class UpbitOrderClient {
     public List<OrderResult> getOrderListInfo(OrderListRequest orderRequest) {
         try {
             String queryString = orderRequest.toQueryString();
+
             MessageDigest md = MessageDigest.getInstance("SHA-512");
             md.update(queryString.getBytes("UTF-8"));
 
             String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
+            String jwtToken = makeJWT(queryHash);
 
-            Algorithm algorithm = Algorithm.HMAC256(properties.getSecretKey());
-            String jwtToken = JWT.create()
-                    .withClaim("access_key", properties.getAccessKey())
-                    .withClaim("nonce", UUID.randomUUID().toString())
-                    .withClaim("query_hash", queryHash)
-                    .withClaim("query_hash_alg", "SHA512")
-                    .sign(algorithm);
+            URI uri = URI.create(properties.getServerUrl() + "/v1/orders?" + queryString);
 
-            String authenticationToken = "Bearer " + jwtToken;
+            ResponseEntity<String> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.POST,
+                    new HttpEntity(getHttpHeaders(jwtToken)),
+                    String.class);
+
+            if (HttpStatus.OK != response.getStatusCode()) {
+                throw new Exception("StatusCode = " + response.getStatusCode().value());
+            }
 
             try {
-                HttpClient client = HttpClientBuilder.create().build();
-                HttpGet request = new HttpGet(properties.getServerUrl() + "/v1/orders?" + queryString);
-                request.setHeader("Content-Type", "application/json");
-                request.addHeader("Authorization", authenticationToken);
-
-                HttpResponse response = client.execute(request);
-                org.apache.http.HttpEntity entity = response.getEntity();
-
-                return JsonUtil.listFromJson(EntityUtils.toString(entity, "UTF-8"), OrderResult.class);
-            } catch (IOException e) {
+                return JsonUtil.listFromJson(response.getBody(), OrderResult.class);
+            } catch (Exception e) {
                 throw e;
             }
         } catch (Exception e) {
@@ -140,28 +134,23 @@ public class UpbitOrderClient {
             md.update(queryString.getBytes("UTF-8"));
 
             String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
+            String jwtToken = makeJWT(queryHash);
 
-            Algorithm algorithm = Algorithm.HMAC256(properties.getSecretKey());
-            String jwtToken = JWT.create()
-                    .withClaim("access_key", properties.getAccessKey())
-                    .withClaim("nonce", UUID.randomUUID().toString())
-                    .withClaim("query_hash", queryHash)
-                    .withClaim("query_hash_alg", "SHA512")
-                    .sign(algorithm);
+            URI uri = URI.create(properties.getServerUrl() + "/v1/orders?" + queryString);
 
-            String authenticationToken = "Bearer " + jwtToken;
+            ResponseEntity<String> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.POST,
+                    new HttpEntity(getHttpHeaders(jwtToken)),
+                    String.class);
+
+            if (HttpStatus.OK != response.getStatusCode()) {
+                throw new Exception("StatusCode = " + response.getStatusCode().value());
+            }
 
             try {
-                HttpClient client = HttpClientBuilder.create().build();
-                HttpDelete request = new HttpDelete(properties.getServerUrl() + "/v1/order?" + queryString);
-                request.setHeader("Content-Type", "application/json");
-                request.addHeader("Authorization", authenticationToken);
-
-                HttpResponse response = client.execute(request);
-                org.apache.http.HttpEntity entity = response.getEntity();
-
-                return JsonUtil.fromJson(EntityUtils.toString(entity, "UTF-8"), OrderCancelResult.class);
-            } catch (IOException e) {
+                return JsonUtil.fromJson(response.getBody(), OrderCancelResult.class);
+            } catch (Exception e) {
                 throw e;
             }
         } catch (Exception e) {
@@ -193,9 +182,7 @@ public class UpbitOrderClient {
                 queryElements.add(entity.getKey() + "=" + entity.getValue());
             }
 
-            MessageDigest md = getMessageDigest(String.join("&", queryElements.toArray(new String[0])));
-            String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
-            String jwtToken = makeJWT(queryHash);
+            String jwtToken = generateToken(String.join("&", queryElements.toArray(new String[0])));
 
             try {
                 URI uri = URI.create(properties.getServerUrl() + "/v1/orders");
