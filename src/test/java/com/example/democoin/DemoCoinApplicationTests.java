@@ -3,6 +3,7 @@ package com.example.democoin;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.example.democoin.configuration.properties.UpbitProperties;
+import com.example.democoin.slack.SlackMessageService;
 import com.example.democoin.task.service.ScheduleService;
 import com.example.democoin.upbit.client.UpbitAllMarketClient;
 import com.example.democoin.upbit.client.UpbitAssetClient;
@@ -22,6 +23,7 @@ import com.example.democoin.upbit.result.orders.MarketOrderableResult;
 import com.example.democoin.upbit.result.orders.OrderCancelResult;
 import com.example.democoin.upbit.result.orders.OrderResult;
 import com.example.democoin.utils.JsonUtil;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -35,7 +37,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -45,6 +49,7 @@ import java.util.stream.Collectors;
 import static com.example.democoin.upbit.enums.MarketUnit.KRW;
 import static com.example.democoin.upbit.enums.OrdSideType.ASK;
 import static com.example.democoin.upbit.enums.OrdSideType.BID;
+import static java.math.RoundingMode.HALF_UP;
 
 @SpringBootTest
 class DemoCoinApplicationTests {
@@ -81,6 +86,9 @@ class DemoCoinApplicationTests {
         serverUrl = upbitProperties.getServerUrl();
     }
 
+    @Autowired
+    private SlackMessageService slackMessageService;
+
 //    @Transactional
     @Test
     void contextLoads() throws Exception {
@@ -102,12 +110,72 @@ class DemoCoinApplicationTests {
         System.out.println();
 */
 /*
+    5분봉 수집 스케줄
+        - 매 0분, 5분 마다 5분봉 하나를 수집한다.
     매수 스케줄 조건
         - 한 종목을 전체 금액의 20% 이상 매수 금지
-        -
+        - RSI14, 볼린져밴드, 5분봉 3틱 하락
     매도 스케줄
-        -
+        - -2% 손실의 경우 매도, 3% 수익 매도 -> 분할매수, 분할매도 고려는 나중에. 로직에 고려는 할것.
+        - RSI14, 볼린져밴드
+
+    각 스케쥴마다 슬랙 알림톡 생성 후 알림 발송.
+    1. 2022-01-01 12:00:00 5분봉 수집완료
+    2. 비트코인 매수 : 5,000 KRW (수수료 : n KRW)
+    3. 비트코인 매도 : 5,100 KRW (수수료 : n KRW)
 */
+
+//        List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, "KRW-BTC", 200, LocalDateTime.now().minusMinutes(5));
+//        List<Double> prices = minuteCandles.stream().map(MinuteCandle::getTradePrice).collect(Collectors.toList());
+//        BollingerBands bollingerBands = getBollingerBands(prices);
+    }
+
+    /**
+     * 볼린져밴드
+     * @param prices
+     * @return
+     */
+    private BollingerBands getBollingerBands(List<Double> prices) {
+        List<BigDecimal> mdd = getSMAList(20, prices);
+        double stdev = stdev(prices.subList(0, 20));
+        List<BigDecimal> udd = mdd.stream().map(value -> BigDecimal.valueOf(value.doubleValue() + (stdev * 2))).collect(Collectors.toList());
+        List<BigDecimal> ldd = mdd.stream().map(value -> BigDecimal.valueOf(value.doubleValue() - (stdev * 2))).collect(Collectors.toList());
+
+        return BollingerBands.of(udd, mdd, ldd);
+    }
+
+    /**
+     * 이동평균선
+     * @param day
+     * @param prices
+     * @return
+     */
+    private List<BigDecimal> getSMAList(int day, List<Double> prices) {
+        List<BigDecimal> prices20 = new ArrayList<>();
+        for (int i = 0; i < prices.size(); i++) {
+            int fromIndex = i;
+            int toIndex = i + day;
+            if (toIndex > prices.size()) {
+                break;
+            }
+            ArrayList<Double> priceList = new ArrayList<>(prices.subList(fromIndex, toIndex));
+            OptionalDouble average = priceList.stream().mapToDouble(Double::doubleValue).average();
+            prices20.add(new BigDecimal(average.getAsDouble()).setScale(4, HALF_UP));
+        }
+        return prices20;
+    }
+
+    /**
+     * 표준편차
+     * @param values
+     * @return
+     */
+    private double stdev(List<Double> values) {
+        SummaryStatistics statistics = new SummaryStatistics();
+        for (Double value : values) {
+            statistics.addValue(value);
+        }
+        return statistics.getStandardDeviation();
     }
 
     private void 오늘_가장최근수집된일자_수집() throws Exception {

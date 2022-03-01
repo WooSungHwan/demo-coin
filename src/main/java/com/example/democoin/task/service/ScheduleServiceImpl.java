@@ -22,11 +22,10 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public void collectGetCoinFiveMinutesCandles() throws Exception {
-
-        int size = 0;
         LocalDateTime nextTo = LocalDateTime.now().minusMinutes(5); // 현재 만들어지는 분봉에 의해서 값이 왜곡된다.
         boolean flag = true;
         while (flag) {
+            int size = 0;
             long start = System.currentTimeMillis();
 
             List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, "KRW-BTC", 200, nextTo);
@@ -40,7 +39,7 @@ public class ScheduleServiceImpl implements ScheduleService {
                     break;
                 }
             }
-
+            nextTo = minuteCandles.get(minuteCandles.size() - 1).getCandleDateTimeUtc();
             long end = System.currentTimeMillis();
             System.out.printf("========== %s초 =========== 사이즈 : %s\r\n", (end - start) / 1000.0, size);
             Thread.sleep(100);

@@ -17,8 +17,8 @@ public enum MarketUnit implements EnumInterface {
     private String type;
     private String name;
 
-    public boolean matched(String market) {
-        return StringUtils.equals(type, market);
+    public boolean contains(String market) {
+        return market.contains(type);
     }
 
     public static MarketUnit find(String type) {
