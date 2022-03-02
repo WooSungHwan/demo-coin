@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -109,29 +108,50 @@ class DemoCoinApplicationTests {
         double[] count = rsi.count(bitcoins); //
         System.out.println();
 */
-/*
-    5분봉 수집 스케줄
-        - 매 0분, 5분 마다 5분봉 하나를 수집한다.
-    매수 스케줄 조건
-        - 한 종목을 전체 금액의 20% 이상 매수 금지
-        - RSI14, 볼린져밴드, 5분봉 3틱 하락
-    매도 스케줄
-        - -2% 손실의 경우 매도, 3% 수익 매도 -> 분할매수, 분할매도 고려는 나중에. 로직에 고려는 할것.
-        - RSI14, 볼린져밴드
-
-    각 스케쥴마다 슬랙 알림톡 생성 후 알림 발송.
-    1. 2022-01-01 12:00:00 5분봉 수집완료
-    2. 비트코인 매수 : 5,000 KRW (수수료 : n KRW)
-    3. 비트코인 매도 : 5,100 KRW (수수료 : n KRW)
-*/
 
 //        List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, "KRW-BTC", 200, LocalDateTime.now().minusMinutes(5));
 //        List<Double> prices = minuteCandles.stream().map(MinuteCandle::getTradePrice).collect(Collectors.toList());
 //        BollingerBands bollingerBands = getBollingerBands(prices);
+
+
+        int page = 1;
+        while (true) {
+            int limit = 200;
+            int offset = (page - 1) * limit;
+            List<FiveMinutesCandle> fiveMinutesCandles = fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(limit, offset);
+
+            for (int i = 0; i < fiveMinutesCandles.size(); i++) {
+                if (i < 3) {
+                    continue;
+                }
+                FiveMinutesCandle target = fiveMinutesCandles.get(i);
+                List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(target.getTimestamp());
+
+                // 타겟 포함하는 캔들에서 매수신호가 떨어지면 다음 캔들의 시가에서 매수한다.
+                if (매수신호(candles)) {
+                    // 매수
+                }
+
+                // List 보유목록;
+                // 보유목록 있고
+                if (매도신호()) {
+                    // 매도
+
+                }
+            }
+            page++;
+        }
+
+    }
+
+    private boolean 매도신호() {
+    }
+
+    private boolean 매수신호(List<FiveMinutesCandle> candles) {
     }
 
     /**
-     * 볼린져밴드
+     * 볼린저 밴드
      * @param prices
      * @return
      */
