@@ -9,7 +9,7 @@ import java.util.List;
 
 @Builder
 @Data
-public class OrderCancelRequest {
+public class SingleOrderRequest {
     private String uuid;
     private String identifier;
 

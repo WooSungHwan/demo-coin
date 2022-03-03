@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.example.democoin.upbit.request.MarketOrderableRequest;
 import com.example.democoin.upbit.request.OrderCancelRequest;
+import com.example.democoin.upbit.request.SingleOrderRequest;
 import com.example.democoin.upbit.result.orders.OrderCancelResult;
 import com.example.democoin.upbit.request.OrderListRequest;
 import com.example.democoin.upbit.result.orders.OrderResult;
@@ -11,6 +12,7 @@ import com.example.democoin.upbit.enums.OrdSideType;
 import com.example.democoin.upbit.enums.OrdType;
 import com.example.democoin.configuration.properties.UpbitProperties;
 import com.example.democoin.upbit.result.orders.MarketOrderableResult;
+import com.example.democoin.upbit.result.orders.SingleOrderResult;
 import com.example.democoin.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -82,6 +84,40 @@ public class UpbitOrderClient {
         String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
         String jwtToken = makeJWT(queryHash);
         return jwtToken;
+    }
+
+    /**
+     * 개별 주문 정보
+     * @param singleOrderRequest
+     * @return
+     */
+    public SingleOrderResult singleOrderRequest(SingleOrderRequest singleOrderRequest) {
+        try {
+            String queryString = singleOrderRequest.toQueryString();
+
+            String jwtToken = generateToken(queryString);
+
+            URI uri = URI.create(properties.getServerUrl() + "/v1/order?" + queryString);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.GET,
+                    new HttpEntity(getHttpHeaders(jwtToken)),
+                    String.class);
+
+            if (response.getStatusCode() != HttpStatus.OK) {
+                throw new Exception("StatusCode = " + response.getStatusCode().value());
+            }
+
+            try {
+                return JsonUtil.fromJson(response.getBody(), SingleOrderResult.class);
+            } catch (Exception e) {
+                throw e;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -160,17 +196,17 @@ public class UpbitOrderClient {
     }
 
     /**
-     *
+     * 주문하기
      * @param market
      * @param ordSideType
      * @param volume
      * @param price
      */
-    public void order(String market, OrdSideType ordSideType, String volume, String price) {
-        order(market, ordSideType, volume, price, null);
+    public OrderResult order(String market, OrdSideType ordSideType, String volume, String price) {
+        return order(market, ordSideType, volume, price, null);
     }
 
-    private void order(String market, OrdSideType ordSideType, String volume, String price, Double percent) {
+    private OrderResult order(String market, OrdSideType ordSideType, String volume, String price, Double percent) {
         try {
             if (volume != null && percent != null) {
                 volume = new BigDecimal(Double.parseDouble(volume) * percent).round(MathContext.DECIMAL32).toString();
@@ -184,25 +220,27 @@ public class UpbitOrderClient {
 
             String jwtToken = generateToken(String.join("&", queryElements.toArray(new String[0])));
 
+            URI uri = URI.create(properties.getServerUrl() + "/v1/orders");
+            ResponseEntity<String> response = restTemplate.exchange(
+                    uri,
+                    HttpMethod.POST,
+                    new HttpEntity(params, getHttpHeaders(jwtToken)),
+                    String.class);
+
+            if (response.getStatusCode() != HttpStatus.CREATED) {
+                throw new Exception("StatusCode = " + response.getStatusCode().value());
+            }
+
             try {
-                URI uri = URI.create(properties.getServerUrl() + "/v1/orders");
-                ResponseEntity<String> response = restTemplate.exchange(
-                        uri,
-                        HttpMethod.POST,
-                        new HttpEntity(params, getHttpHeaders(jwtToken)),
-                        String.class);
-
-                if (response.getStatusCode() != HttpStatus.CREATED) {
-                    throw new Exception("StatusCode = " + response.getStatusCode().value());
-                }
-
-                System.out.println(response.getBody());
-            } catch (IOException e) {
+                Thread.sleep(100);
+                return JsonUtil.fromJson(response.getBody(), OrderResult.class);
+            } catch (Exception e) {
                 throw e;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     private HttpHeaders getHttpHeaders(String jwtToken) {
