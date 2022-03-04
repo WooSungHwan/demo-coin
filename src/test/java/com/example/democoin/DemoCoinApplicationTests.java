@@ -1,7 +1,7 @@
 package com.example.democoin;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
+import com.example.democoin.backtest.BackTest;
+import com.example.democoin.backtest.common.AccountCoinWalletRepository;
 import com.example.democoin.configuration.properties.UpbitProperties;
 import com.example.democoin.slack.SlackMessageService;
 import com.example.democoin.task.service.ScheduleService;
@@ -28,12 +28,6 @@ import com.example.democoin.upbit.result.orders.OrderResult;
 import com.example.democoin.upbit.result.orders.SingleOrderResult;
 import com.example.democoin.utils.JsonUtil;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +36,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -80,6 +72,9 @@ class DemoCoinApplicationTests {
 
     @Autowired
     private OrdersRepository ordersRepository;
+
+    @Autowired
+    private AccountCoinWalletRepository accountCoinWalletRepository;
 
     String accessKey;
     String secretKey;
@@ -121,96 +116,17 @@ class DemoCoinApplicationTests {
 //        BollingerBands bollingerBands = getBollingerBands(prices);
 
 
-//        backtesting();
+        backTesting();
 
 
-        주문예제();
+//        주문예제();
     }
 
-    private void backtesting() {
-        int page = 1;
-        while (true) {
-            int limit = 200;
-            int offset = (page - 1) * limit;
-            List<FiveMinutesCandle> fiveMinutesCandles = fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(limit, offset);
+    @Autowired
+    private BackTest backTest;
 
-            for (int i = 0; i < fiveMinutesCandles.size(); i++) {
-                if (i < 3) {
-                    continue;
-                }
-                FiveMinutesCandle target = fiveMinutesCandles.get(i);
-                List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(target.getTimestamp());
-
-                // 타겟 포함하는 캔들에서 매수신호가 떨어지면 다음 캔들의 시가에서 매수한다.
-                if (매수신호(candles)) {
-                    // 매수
-                }
-
-                // List 보유목록;
-                // 보유목록 있고
-                if (매도신호()) {
-                    // 매도
-
-                }
-            }
-            page++;
-        }
-    }
-
-    private boolean 매도신호() {
-        return false;
-    }
-
-    private boolean 매수신호(List<FiveMinutesCandle> candles) {
-        return false;
-    }
-
-    /**
-     * 볼린저 밴드
-     * @param prices
-     * @return
-     */
-    private BollingerBands getBollingerBands(List<Double> prices) {
-        List<BigDecimal> mdd = getSMAList(20, prices);
-        double stdev = stdev(prices.subList(0, 20));
-        List<BigDecimal> udd = mdd.stream().map(value -> BigDecimal.valueOf(value.doubleValue() + (stdev * 2))).collect(Collectors.toList());
-        List<BigDecimal> ldd = mdd.stream().map(value -> BigDecimal.valueOf(value.doubleValue() - (stdev * 2))).collect(Collectors.toList());
-
-        return BollingerBands.of(udd, mdd, ldd);
-    }
-
-    /**
-     * 이동평균선
-     * @param day
-     * @param prices
-     * @return
-     */
-    private List<BigDecimal> getSMAList(int day, List<Double> prices) {
-        List<BigDecimal> prices20 = new ArrayList<>();
-        for (int i = 0; i < prices.size(); i++) {
-            int fromIndex = i;
-            int toIndex = i + day;
-            if (toIndex > prices.size()) {
-                break;
-            }
-            ArrayList<Double> priceList = new ArrayList<>(prices.subList(fromIndex, toIndex));
-            OptionalDouble average = priceList.stream().mapToDouble(Double::doubleValue).average();
-            prices20.add(new BigDecimal(average.getAsDouble()).setScale(4, HALF_UP));
-        }
-        return prices20;
-    }
-
-    /**
-     * 표준편차
-     * @param values
-     * @return
-     */
-    private double stdev(List<Double> values) {
-        SummaryStatistics statistics = new SummaryStatistics();
-        for (Double value : values) {
-            statistics.addValue(value);
-        }
-        return statistics.getStandardDeviation();
+    private void backTesting() {
+        backTest.start();
     }
 
     private void 오늘_가장최근수집된일자_수집() throws Exception {
