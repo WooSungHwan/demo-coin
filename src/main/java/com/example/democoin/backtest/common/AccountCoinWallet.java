@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import static java.math.RoundingMode.HALF_UP;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -51,6 +55,6 @@ public class AccountCoinWallet {
     }
 
     public double 수익률(double nowPrice) {
-        return ((nowPrice / this.avgPrice) * 100) - 100;
+        return new BigDecimal(((nowPrice / this.avgPrice) * 100) - 100).setScale(2, HALF_UP).doubleValue();
     }
 }

@@ -27,7 +27,6 @@ import com.example.democoin.upbit.result.orders.OrderCancelResult;
 import com.example.democoin.upbit.result.orders.OrderResult;
 import com.example.democoin.upbit.result.orders.SingleOrderResult;
 import com.example.democoin.utils.JsonUtil;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,16 +34,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import static com.example.democoin.upbit.enums.MarketUnit.KRW;
 import static com.example.democoin.upbit.enums.OrdSideType.ASK;
 import static com.example.democoin.upbit.enums.OrdSideType.BID;
-import static java.math.RoundingMode.HALF_UP;
 
 @SpringBootTest
 class DemoCoinApplicationTests {

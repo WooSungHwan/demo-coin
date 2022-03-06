@@ -32,11 +32,11 @@ public interface FiveMinutesCandleRepository extends JpaRepository<FiveMinutesCa
                                                               @Param("offset") int offset);
 
     /**
-     * 해당 시점을 포함하여 캔들 50개 가져온다.
+     * 해당 시점을 포함하여 캔들 200개 가져온다.
      * @param timstamp
      * @return
      */
-    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE timestamp <= :timestamp ORDER BY candle_date_time_kst DESC LIMIT 50")
+    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE timestamp <= :timestamp ORDER BY candle_date_time_kst DESC LIMIT 200")
     List<FiveMinutesCandle> findFiveMinutesCandlesUnderByTimestamp(@Param("timestamp") long timstamp);
 
     /**

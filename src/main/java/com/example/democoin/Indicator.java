@@ -1,9 +1,11 @@
 package com.example.democoin;
 
+import com.example.democoin.indicator.RSI;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalDouble;
 import java.util.stream.Collectors;
@@ -60,4 +62,17 @@ public class Indicator {
         return statistics.getStandardDeviation();
     }
 
+    /**
+     * RSI 14
+     * @param prices
+     * @return
+     */
+    public static RSIs getRSI14(List<Double> prices) {
+        RSI rsi = new RSI(14);
+        double[] rawDoubles = prices.stream().mapToDouble(p -> p).toArray();
+
+        return RSIs.of(Arrays.stream(rsi.count(rawDoubles))
+                .boxed()
+                .collect(Collectors.toUnmodifiableList()));
+    }
 }
