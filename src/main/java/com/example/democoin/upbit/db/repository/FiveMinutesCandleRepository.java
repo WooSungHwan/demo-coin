@@ -27,12 +27,13 @@ public interface FiveMinutesCandleRepository extends JpaRepository<FiveMinutesCa
      * @param offset
      * @return
      */
-    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle ORDER BY candle_date_time_kst LIMIT :limit OFFSET :offset")
-    List<FiveMinutesCandle> findFiveMinutesCandlesLimitOffset(@Param("limit") int limit,
+    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE candle_date_time_kst >= :kst ORDER BY candle_date_time_kst LIMIT :limit OFFSET :offset")
+    List<FiveMinutesCandle> findFiveMinutesCandlesLimitOffset(@Param("kst") LocalDateTime kst,
+                                                              @Param("limit") int limit,
                                                               @Param("offset") int offset);
 
     /**
-     * 해당 시점을 포함하여 캔들 200개 가져온다.
+     * 해당 시점을 포함하여 이전 캔들 200개 가져온다.
      * @param timstamp
      * @return
      */

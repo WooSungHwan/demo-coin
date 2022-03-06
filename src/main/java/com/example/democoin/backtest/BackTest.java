@@ -14,7 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalField;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -48,52 +52,89 @@ public class BackTest {
         while (!over) {
             int limit = 200;
             int offset = (page - 1) * limit;
-            List<FiveMinutesCandle> fiveMinutesCandles = fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(limit, offset);
+            List<FiveMinutesCandle> fiveMinutesCandles = fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(
+                    LocalDateTime.of(2017, 11, 1, 0, 0, 0), limit, offset);
 
             for (int i = 0; i < fiveMinutesCandles.size(); i++) {
                 if (i < 3) {
                     continue;
                 }
-                FiveMinutesCandle target = fiveMinutesCandles.get(i);
-                log.info("KST {} 캔들 백테스팅 시작", target.getCandleDateTimeKst());
-                List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(target.getTimestamp());
+                FiveMinutesCandle baseCandle = fiveMinutesCandles.get(i);
+                if (Objects.isNull(baseCandle)) {
+                    System.out.println();
+                }
+//                log.info("KST {} 캔들 백테스팅 시작", target.getCandleDateTimeKst());
+                if (baseCandle.getTimestamp() == null) {
+                    continue;
+                }
+                List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(baseCandle.getTimestamp());
 
                 if (candles.size() < 200) {
-                    log.info("해당 시간대는 캔들 200개 미만이므로 테스트할 수 없습니다. -- {}", target.getCandleDateTimeKst());
+                    log.info("해당 시간대는 캔들 200개 미만이므로 테스트할 수 없습니다. -- {}", baseCandle.getCandleDateTimeKst());
                     continue;
                 }
 
-                FiveMinutesCandle nextCandle = fiveMinutesCandleRepository.nextCandle(target.getTimestamp(), target.getMarket());
-                if (Objects.isNull(nextCandle)) {
-                    log.info("{} 해당 캔들에서 종료됨", target.getCandleDateTimeKst());
+                // targetCandle의 봉에서 매수, 매도, 잔액 찍을것임.
+                FiveMinutesCandle targetCandle = fiveMinutesCandleRepository.nextCandle(baseCandle.getTimestamp(), baseCandle.getMarket());
+                if (Objects.isNull(targetCandle)) {
+                    log.info("{} 해당 캔들에서 종료됨", baseCandle.getCandleDateTimeKst());
                     return;
                 }
 
-                Double openingPrice = nextCandle.getOpeningPrice(); // 다음캔들 시가
+                Double openingPrice = targetCandle.getOpeningPrice(); // 다음캔들 시가
                 final double bidVolume = bidPrice / openingPrice; // 시가로 매수할 거래량 계산
                 final double askVolume = askPrice / openingPrice; // 시가로 매도할 거래량 계산
                 final double fee = bidPrice * 0.0005; // 수수료 계산
 
                 AccountCoinWallet wallet = accountCoinWalletRepository.findByMarket(targetMarket);
-                if (매도가능(wallet) && 매도신호(wallet, candles)) {
-                    매도(nextCandle, openingPrice, askVolume, fee, wallet);
+                boolean isAskable = 매도가능(wallet);
+                boolean isBidable = 매수가능();
+
+                if (!isAskable && !isBidable) {
+                    continue;
+                }
+
+                List<Double> prices = candles.stream().map(FiveMinutesCandle::getTradePrice).collect(Collectors.toUnmodifiableList());
+                BollingerBands bollingerBands = Indicator.getBollingerBands(prices);
+                RSIs rsi14 = Indicator.getRSI14(prices);
+
+                boolean isAsk = isAskable && 매도신호(wallet, bollingerBands, rsi14, baseCandle);
+                if (isAsk) {
+                    log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
+                    printWalletBalance("매도 전", targetMarket);
+                    매도(targetCandle, openingPrice, askVolume, fee, wallet);
+                    printWalletBalance("매도 후", targetMarket);
+                    log.info("");
                 }
 
                 // 타겟 포함하는 캔들에서 매수신호가 떨어지면 다음 캔들의 시가에서 매수한다.
-                if (매수가능() && 매수신호(candles)) {
-                    매수(nextCandle, openingPrice, bidPrice, fee, bidVolume);
+                boolean isBid = isBidable && 매수신호(targetMarket, bollingerBands, rsi14, baseCandle);
+                if (isBid) {
+                    log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
+                    printWalletBalance("매수 전", targetMarket);
+                    매수(targetCandle, openingPrice, bidPrice, fee, bidVolume);
+                    printWalletBalance("매수 후", targetMarket);
+                    log.info("");
                 }
 
-                // 잔고 출력
-                printWalletBalance(nextCandle, wallet);
+                if (LocalDateTime.of(2018, 1, 1, 0, 0, 0).isBefore(targetCandle.getCandleDateTimeKst())) {
+                    return;
+                }
             }
             page++;
         }
     }
 
-    private void printWalletBalance(FiveMinutesCandle nextCandle, AccountCoinWallet wallet) {
+    private void printWalletBalance(String beforeAfterTrade, String market) {
+        AccountCoinWallet wallet = accountCoinWalletRepository.findByMarket(market);
         if (Objects.nonNull(wallet)) {
-            log.info("{} 평단가 : {}, 수익률 : {}%, KRW : {}원", wallet.getMarket(), df.format(wallet.getAvgPrice()), wallet.수익률(nextCandle.getTradePrice()), df.format(wallet.getAllPrice()));
+            log.info("[{}] {} 평단가 : {}, 수익률 : {}%, 보유코인 : {}, KRW : {}원"
+                    , beforeAfterTrade
+                    , wallet.getMarket() // 코인 시장
+                    , df.format(wallet.getAvgPrice()) // 평단가
+                    , wallet.수익률() // 수익률
+                    , wallet.getVolume() // 보유코인
+                    , df.format(wallet.getAllPrice())); // 총 매수가
         }
     }
 
@@ -111,7 +152,7 @@ public class BackTest {
         // 매도 -> 다음 캔들 시가에 매도
         backTestOrdersRepository.save(BackTestOrders.of(wallet.getMarket(), ASK, openingPrice, askVolume, fee, nextCandle.getTimestamp()));
         // 지갑에 매도 반영
-        wallet.addAsk(askVolume, askPrice, fee);
+        wallet.addAsk(openingPrice, askVolume, askPrice, fee);
         accountCoinWalletRepository.save(wallet);
 
         log.info("{} 매도 발생 !! ---- 매도가 {}원 / 매도 볼륨 {}", wallet.getMarket(), df.format(openingPrice), askVolume);
@@ -141,9 +182,9 @@ public class BackTest {
     private AccountCoinWallet setBidWallet(FiveMinutesCandle nextCandle, Double openingPrice, double bidPrice, double fee, double volume) {
         AccountCoinWallet wallet = accountCoinWalletRepository.findByMarket(nextCandle.getMarket());
         if (Objects.isNull(wallet)) {
-            accountCoinWalletRepository.save(AccountCoinWallet.of(nextCandle.getMarket(), openingPrice, volume, bidPrice));
+            accountCoinWalletRepository.save(AccountCoinWallet.of(nextCandle.getMarket(), openingPrice, volume, bidPrice + fee));
         } else {
-            wallet.addBid(volume, bidPrice, fee);
+            wallet.addBid(openingPrice, volume, bidPrice, fee);
             accountCoinWalletRepository.save(wallet);
         }
         return wallet;
@@ -151,26 +192,20 @@ public class BackTest {
 
     /**
      * 매도 신호 포착
-     * @param coinWallet 현재 보유 코인
-     * @param candles 백테스팅 시각의 캔들(500개)
+     * @param coinWallet 현재 지갑 정보
+     * @param bollingerBands 볼린저 밴드
+     * @param rsi14 rsi
+     * @param candle 최근 캔들 1개
      * @return
      */
-    private boolean 매도신호(AccountCoinWallet coinWallet, List<FiveMinutesCandle> candles) {
-        if (CollectionUtils.isEmpty(candles)) {
-            return false;
-        }
+    private boolean 매도신호(AccountCoinWallet coinWallet, BollingerBands bollingerBands, RSIs rsi14, FiveMinutesCandle candle) {
         String market = coinWallet.getMarket(); // 해당 마켓의 코드
-
-        // TODO 중복되는군..
-        List<Double> prices = candles.stream().map(FiveMinutesCandle::getTradePrice).collect(Collectors.toUnmodifiableList());
-        BollingerBands bollingerBands = Indicator.getBollingerBands(prices);
-        RSIs rsi14 = Indicator.getRSI14(prices);
 
         // 볼린저 밴드 상단 터치
         // rsi 65 이상
-        if (rsi14.isOver(65) && bollingerBands.isBollingerBandUddTouch(candles.get(0))) {
+        if (rsi14.isOver(65) && bollingerBands.isBollingerBandUddTouch(candle)) {
             log.info("{} 해당 코인 매도 신호 발생, KST 캔들 시각 : {}, rsi : {}, 볼밴 상단 : {}",
-                    market, candles.get(0).getCandleDateTimeKst(), rsi14.getRsi().get(0), bollingerBands.getLdd().get(0));
+                    market, candle.getCandleDateTimeKst(), rsi14.getRsi().get(0), bollingerBands.getLdd().get(0));
             return true;
         }
         return false;
@@ -178,24 +213,18 @@ public class BackTest {
 
     /**
      * 매수 신호 포착
-     * @param candles 백테스팅 시각의 캔들(500개)
+     * @param market 코인 코드
+     * @param bollingerBands 볼린저 밴드
+     * @param rsi14 rsi
+     * @param candle 최근 캔들 1개
      * @return
      */
-    private boolean 매수신호(List<FiveMinutesCandle> candles) {
-        if (CollectionUtils.isEmpty(candles)) {
-            return false;
-        }
-        String market = candles.get(0).getMarket();
-
-        List<Double> prices = candles.stream().map(FiveMinutesCandle::getTradePrice).collect(Collectors.toUnmodifiableList());
-        BollingerBands bollingerBands = Indicator.getBollingerBands(prices);
-        RSIs rsi14 = Indicator.getRSI14(prices);
-
+    private boolean 매수신호(String market, BollingerBands bollingerBands, RSIs rsi14, FiveMinutesCandle candle) {
         // 볼린저 밴드 하단 터치
         // rsi 35 미만
-        if (rsi14.isUnder(35) && bollingerBands.isBollingerBandLddTouch(candles.get(0))) {
+        if (rsi14.isUnder(35) && bollingerBands.isBollingerBandLddTouch(candle)) {
             log.info("{} 해당 코인 매수 신호 발생, KST 캔들 시각 : {}, rsi : {}, 볼밴하단 : {}",
-                    market, candles.get(0).getCandleDateTimeKst(), rsi14.getRsi().get(0), bollingerBands.getLdd().get(0));
+                    market, candle.getCandleDateTimeKst(), rsi14.getRsi().get(0), bollingerBands.getLdd().get(0));
             return true;
         }
 

@@ -54,7 +54,11 @@ public class RSI {
             rsis = new double[emaLength];
             for (int i = 0; i < rsis.length; i++) {
                 double val = 100 - (100 / (double) (1 + emus[i] / emds[i]));
-                rsis[i] = new BigDecimal(val).setScale(2, RoundingMode.HALF_UP).doubleValue();
+                if (Double.isNaN(val)) {
+                    rsis[i] = 0;
+                } else {
+                    rsis[i] = new BigDecimal(val).setScale(2, RoundingMode.HALF_UP).doubleValue();
+                }
             }
         }
 

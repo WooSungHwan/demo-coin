@@ -38,23 +38,35 @@ public class AccountCoinWallet {
     @Column(name = "all_price")
     private Double allPrice; // 총 매수 KRW
 
+    @Column(name = "proceeds")
+    private Double proceeds; // 수익금
+
+    @Column(name = "val_amount")
+    private Double valAmount; // 평가금액
+
     public static AccountCoinWallet of(String market, Double tradePrice, Double tradeVolume, Double allPrice) {
-        return new AccountCoinWallet(null, market, tradePrice, tradeVolume, allPrice);
+        double valAmount = tradePrice * tradeVolume;
+        double proceeds = valAmount - allPrice;
+        return new AccountCoinWallet(null, market, tradePrice, tradeVolume, allPrice, proceeds, valAmount);
     }
 
-    public void addBid(Double bidVolume, Double bidPrice, Double fee) {
+    public void addBid(Double tradePrice, Double bidVolume, Double bidPrice, Double fee) {
         this.volume += bidVolume;
-        this.allPrice += bidPrice + fee;
-        this.avgPrice = allPrice / volume;
+        this.allPrice += (bidPrice + fee);
+        this.avgPrice = this.allPrice / this.volume;
+        this.valAmount = tradePrice * volume;
+        this.proceeds = this.valAmount - this.allPrice;
     }
 
-    public void addAsk(Double askVolume, Double askPrice, Double fee) {
+    public void addAsk(Double tradePrice, Double askVolume, Double askPrice, Double fee) {
         this.volume -= askVolume;
-        this.allPrice -= askPrice + fee;
-        this.avgPrice = allPrice / volume;
+        this.allPrice -= (askPrice + fee);
+        this.avgPrice = this.allPrice / this.volume;
+        this.valAmount = tradePrice * volume;
+        this.proceeds = this.valAmount - this.allPrice;
     }
 
-    public double 수익률(double nowPrice) {
-        return new BigDecimal(((nowPrice / this.avgPrice) * 100) - 100).setScale(2, HALF_UP).doubleValue();
+    public double 수익률() {
+        return (proceeds / allPrice * 100);
     }
 }
