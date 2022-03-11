@@ -1,11 +1,15 @@
 package com.example.democoin.upbit.db.entity;
 
+import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.result.candles.MinuteCandle;
 import lombok.*;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
+import static java.math.RoundingMode.HALF_UP;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -16,12 +20,11 @@ import static lombok.AccessLevel.PROTECTED;
 @NoArgsConstructor(access = PROTECTED)
 @Table(
         name = "five_minutes_candle",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_five_minutes_candle_timestamp", columnNames = {"timestamp"})
-        },
         indexes = {
-                @Index(name = "five_minutes_candle_candle_date_time_utc_idx", columnList = "candle_date_time_utc"),
-                @Index(name = "five_minutes_candle_candle_date_time_kst_idx", columnList = "candle_date_time_kst")
+                @Index(name = "fmc_market_candle_date_time_utc_idx", columnList = "market,candle_date_time_utc"),
+                @Index(name = "fmc_market_candle_date_time_kst_desc_timestamp_idx", columnList = "market,candle_date_time_kst desc,timestamp"),
+                @Index(name = "fmc_market_candle_date_time_kst_idx", columnList = "market,candle_date_time_kst"),
+                @Index(name = "fmc_market_timestamp_idx", columnList = "market,timestamp")
         }
 )
 @Entity
@@ -32,7 +35,7 @@ public class FiveMinutesCandle {
     private Long id;
 
     @Column(name = "market", length = 10)
-    private String market;
+    private MarketType market;
 
     @Column(name = "candle_date_time_utc")
     private LocalDateTime candleDateTimeUtc;                // 캔들 생성 UTC 시간
@@ -62,7 +65,7 @@ public class FiveMinutesCandle {
 
     public static FiveMinutesCandle of(MinuteCandle candle) {
         return new FiveMinutesCandle(null,
-                candle.getMarket(),
+                MarketType.find(candle.getMarket()),
                 candle.getCandleDateTimeUtc(),
                 candle.getCandleDateTimeKst(),
                 candle.getOpeningPrice(),
@@ -72,5 +75,17 @@ public class FiveMinutesCandle {
                 candle.getTimestamp(),
                 candle.getCandleAccTradePrice(),
                 candle.getCandleAccTradeVolume());
+    }
+
+    // 캔들의 상승률
+    public double getCandlePercent() {
+        return BigDecimal.valueOf((this.tradePrice / this.openingPrice * 100) - 100)
+                .setScale(2, HALF_UP)
+                .doubleValue();
+    }
+
+    // 캔들 양봉 여부
+    public boolean isPositive() {
+        return getCandlePercent() > 0;
     }
 }

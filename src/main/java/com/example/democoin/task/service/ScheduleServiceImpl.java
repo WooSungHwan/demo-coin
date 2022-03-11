@@ -3,6 +3,7 @@ package com.example.democoin.task.service;
 import com.example.democoin.upbit.client.UpbitCandleClient;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.db.repository.FiveMinutesCandleRepository;
+import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.result.candles.MinuteCandle;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,14 +22,14 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final UpbitCandleClient upbitCandleClient;
 
     @Override
-    public void collectGetCoinFiveMinutesCandles() throws Exception {
+    public void collectGetCoinFiveMinutesCandles(MarketType market) throws Exception {
         LocalDateTime nextTo = LocalDateTime.now().minusMinutes(5); // 현재 만들어지는 분봉에 의해서 값이 왜곡된다.
         boolean flag = true;
         while (flag) {
             int size = 0;
             long start = System.currentTimeMillis();
 
-            List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, "KRW-BTC", 200, nextTo);
+            List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, market, 200, nextTo);
 
             for (MinuteCandle candle : minuteCandles) {
                 if (!fiveMinutesCandleRepository.existsByTimestamp(candle.getTimestamp())) {

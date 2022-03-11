@@ -1,5 +1,6 @@
 package com.example.democoin.upbit.enums;
 
+import com.example.democoin.EnumInterfaceConverter;
 import com.example.democoin.configuration.enums.EnumInterface;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
@@ -27,4 +28,10 @@ public enum OrdSideType implements EnumInterface {
         return EnumInterface.findToNull(type, values());
     }
 
+    @javax.persistence.Converter(autoApply = true)
+    public static class Converter extends EnumInterfaceConverter<OrdSideType> {
+        public Converter() {
+            super(OrdSideType.class);
+        }
+    }
 }

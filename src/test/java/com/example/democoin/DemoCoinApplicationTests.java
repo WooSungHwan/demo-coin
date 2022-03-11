@@ -1,6 +1,7 @@
 package com.example.democoin;
 
 import com.example.democoin.backtest.BackTest;
+import com.example.democoin.backtest.BackTest2;
 import com.example.democoin.backtest.common.AccountCoinWalletRepository;
 import com.example.democoin.configuration.properties.UpbitProperties;
 import com.example.democoin.slack.SlackMessageService;
@@ -13,6 +14,7 @@ import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.db.entity.Orders;
 import com.example.democoin.upbit.db.repository.FiveMinutesCandleRepository;
 import com.example.democoin.upbit.db.repository.OrdersRepository;
+import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.enums.OrdSideType;
 import com.example.democoin.upbit.enums.OrderStateType;
 import com.example.democoin.upbit.request.MarketOrderableRequest;
@@ -101,8 +103,8 @@ class DemoCoinApplicationTests {
 //        주문예제();
 //        List<OrderResult> orderList = 주문목록조회();
 //        주문취소(orderList.get(0).getUuid());
-//        오늘_가장최근수집된일자_수집();
-//        오늘_최초캔들생성일자_수집();
+//        오늘_가장최근수집된일자_수집(MarketType.KRW_ETH);
+//        오늘_최초캔들생성일자_수집(MarketType.KRW_XRP);
 /*
         double[] bitcoins = {4600000}; //fiveMinutesCandleRepository.findFiveMinutesCandlesByLimit(500);
         RSI rsi = new RSI(14);
@@ -115,7 +117,8 @@ class DemoCoinApplicationTests {
 //        BollingerBands bollingerBands = getBollingerBands(prices);
 
 
-        backTesting();
+//        backTesting();
+        backTesting2();
 
 
 //        주문예제();
@@ -124,20 +127,27 @@ class DemoCoinApplicationTests {
     @Autowired
     private BackTest backTest;
 
+    @Autowired
+    private BackTest2 backTest2;
+
     private void backTesting() {
         backTest.start();
     }
 
-    private void 오늘_가장최근수집된일자_수집() throws Exception {
-        scheduleService.collectGetCoinFiveMinutesCandles();
+    private void backTesting2() {
+        backTest2.start();
     }
 
-    private void 오늘_최초캔들생성일자_수집() throws IOException, InterruptedException {
+    private void 오늘_가장최근수집된일자_수집(MarketType market) throws Exception {
+        scheduleService.collectGetCoinFiveMinutesCandles(market);
+    }
+
+    private void 오늘_최초캔들생성일자_수집(MarketType market) throws IOException, InterruptedException {
         int size = 0;
         LocalDateTime nextTo = LocalDateTime.now().minusMinutes(5);;
         while (true) {
             long start = System.currentTimeMillis();
-            List<MinuteCandle> minuteCandles = 분봉(5, "KRW-BTC", 200, nextTo);
+            List<MinuteCandle> minuteCandles = 분봉(5, market, 200, nextTo);
             size += minuteCandles.size();
             nextTo = minuteCandles.get(minuteCandles.size() - 1).getCandleDateTimeUtc();
             fiveMinutesCandleRepository.saveAll(minuteCandles.stream().map(FiveMinutesCandle::of).collect(Collectors.toUnmodifiableList()));
@@ -151,7 +161,7 @@ class DemoCoinApplicationTests {
         }
     }
 
-    private List<MinuteCandle> 분봉(int minutes, String market, int count, LocalDateTime to) throws IOException {
+    private List<MinuteCandle> 분봉(int minutes, MarketType market, int count, LocalDateTime to) throws IOException {
         return upbitCandleClient.getMinuteCandles(minutes, market, count, to);
     }
 

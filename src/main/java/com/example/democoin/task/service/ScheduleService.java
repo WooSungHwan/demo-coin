@@ -1,5 +1,7 @@
 package com.example.democoin.task.service;
 
+import com.example.democoin.upbit.enums.MarketType;
+
 public interface ScheduleService {
-    void collectGetCoinFiveMinutesCandles() throws Exception ;
+    void collectGetCoinFiveMinutesCandles(MarketType market) throws Exception ;
 }

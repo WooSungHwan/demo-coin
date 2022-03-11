@@ -1,5 +1,6 @@
 package com.example.democoin.backtest.common;
 
+import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.enums.OrdSideType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +11,7 @@ import javax.persistence.*;
 
 import java.time.LocalDateTime;
 
+import static javax.persistence.EnumType.STRING;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -26,9 +28,9 @@ public class BackTestOrders {
     private Long id;
 
     @Column(name = "market", length = 10)
-    private String market;
+    private MarketType market;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "side")
     private OrdSideType side;
 
     @Column(name = "price")
@@ -46,8 +48,18 @@ public class BackTestOrders {
     @Column(name = "timestamp")
     private long timestamp; // 매수한 캔들의 타임스탬프
 
-    public static BackTestOrders of(String market, OrdSideType side, Double price, Double volume, Double fee, long timestamp) {
-        return new BackTestOrders(null, market, side, price, volume, fee, LocalDateTime.now(), timestamp);
+    @Column(name = "proceeds")
+    private Double proceeds;
+
+    @Column(name = "proceed_rate")
+    private Double proceedRate;
+
+    public static BackTestOrders of(MarketType market, OrdSideType side, Double price, Double volume, Double fee, long timestamp, Double proceeds, Double proceedRate) {
+        return new BackTestOrders(null, market, side, price, volume, fee, LocalDateTime.now(), timestamp, proceeds, proceedRate);
+    }
+
+    public static BackTestOrders of(MarketType market, OrdSideType side, Double price, Double volume, Double fee, long timestamp) {
+        return new BackTestOrders(null, market, side, price, volume, fee, LocalDateTime.now(), timestamp, null, null);
     }
 
 }

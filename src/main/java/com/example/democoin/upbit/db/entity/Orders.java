@@ -31,7 +31,7 @@ public class Orders {
     @Column(name = "market", length = 10)
     private String market;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "side")
     private OrdSideType side;
 
     @Column(name = "price")

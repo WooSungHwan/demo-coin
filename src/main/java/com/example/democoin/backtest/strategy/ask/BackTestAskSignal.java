@@ -38,7 +38,7 @@ public class BackTestAskSignal {
     }
 
     public static boolean strategy_4(RSIs rsi14, BollingerBands bollingerBands, FiveMinutesCandle candle) {
-        if (bollingerBands.isBollingerBandWidthMax() && rsi14.isOver(70)) {
+        if (bollingerBands.isBollingerBandWidthMax() && rsi14.isOver(65)) {
             log.info("{} 해당 코인 매도 신호 발생, KST 캔들 시각 : {}",
                     candle.getMarket(), candle.getCandleDateTimeKst());
             return true;
