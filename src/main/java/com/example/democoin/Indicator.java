@@ -21,10 +21,18 @@ public class Indicator {
      */
     public static BollingerBands getBollingerBands(List<Double> prices) {
         List<BigDecimal> mdd = getSMAList(20, prices);
-        double stdev = stdev(prices.subList(0, 20));
-        List<BigDecimal> udd = mdd.stream().map(value -> BigDecimal.valueOf(value.doubleValue() + (stdev * 2))).collect(Collectors.toList());
-        List<BigDecimal> ldd = mdd.stream().map(value -> BigDecimal.valueOf(value.doubleValue() - (stdev * 2))).collect(Collectors.toList());
 
+        List<BigDecimal> udd = new ArrayList<>();
+        List<BigDecimal> ldd = new ArrayList<>();
+        for (int i = 0; i < mdd.size(); i++) {
+            List<Double> priceSubList = prices.subList(i, i + 20);
+            if (priceSubList.size() != 20) {
+                break;
+            }
+            double stdev = stdev(priceSubList);
+            udd.add(mdd.get(i).add(BigDecimal.valueOf((stdev * 2))));
+            ldd.add(mdd.get(i).subtract(BigDecimal.valueOf((stdev * 2))));
+        }
         return BollingerBands.of(udd, mdd, ldd);
     }
 
@@ -34,7 +42,7 @@ public class Indicator {
      * @param prices
      * @return
      */
-    private static List<BigDecimal> getSMAList(int day, List<Double> prices) {
+    public static List<BigDecimal> getSMAList(int day, List<Double> prices) {
         List<BigDecimal> prices20 = new ArrayList<>();
         for (int i = 0; i < prices.size(); i++) {
             int fromIndex = i;

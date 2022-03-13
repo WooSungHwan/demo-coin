@@ -5,15 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
+import com.example.democoin.utils.NumberUtils;
 import javax.persistence.*;
-
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Objects;
 
 import static java.math.RoundingMode.HALF_UP;
-import static javax.persistence.EnumType.STRING;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -53,11 +50,15 @@ public class AccountCoinWallet {
     @Column(name = "balance")
     private Double balance; // 잔액
 
+    @Column(name = "max_proceed_rate")
+    private Double maxProceedRate; // 최고 수익률
+
+    @Deprecated
     public static AccountCoinWallet of(MarketType market, Double tradePrice, Double tradeVolume, Double allPrice, Double balance) {
         double valAmount = tradePrice * tradeVolume;
         double proceeds = valAmount - allPrice;
         double proceedRate = proceeds / allPrice * 100;
-        return new AccountCoinWallet(null, market, tradePrice, tradeVolume, allPrice, proceeds, valAmount, proceedRate, balance);
+        return new AccountCoinWallet(null, market, tradePrice, tradeVolume, allPrice, proceeds, valAmount, proceedRate, balance, proceedRate);
     }
 
     public static AccountCoinWallet of(MarketType market, Double balance) {
@@ -87,32 +88,44 @@ public class AccountCoinWallet {
     }
 
     public void allAsk(Double tradePrice) {
-        this.balance += tradePrice * valAmount * 0.0005; // 수수료 포함
+        double amount = tradePrice * this.volume;
+        this.balance += (amount - (amount * 0.0005)); // 매도 수수료 포함
         this.avgPrice = null;
         this.volume = null;
         this.allPrice = null;
         this.proceeds = null;
         this.valAmount = null;
         this.proceedRate = null;
+        this.maxProceedRate = null;
+        this.balance = new BigDecimal(this.balance).setScale(2, HALF_UP).doubleValue();
     }
 
     public void allBid(double tradePrice, double price, double volume, double fee) {
         this.avgPrice = tradePrice;
-        this.volume = volume;
-        this.allPrice = price;
-        this.valAmount = this.allPrice - fee;
+        this.volume = new BigDecimal(volume).setScale(8, HALF_UP).doubleValue();
+        this.allPrice = price + fee;
+        this.valAmount = new BigDecimal(this.allPrice).setScale(2, HALF_UP).doubleValue();
         this.balance = 0d;
-        this.proceeds = this.valAmount - this.allPrice;
-        this.proceedRate = this.proceeds / this.allPrice * 100;
+        this.proceeds = new BigDecimal(this.valAmount - this.allPrice).setScale(2, HALF_UP).doubleValue();
+        double proceedRate = new BigDecimal(this.proceeds / this.allPrice * 100).setScale(2, HALF_UP).doubleValue();
+        this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
+        this.proceedRate = proceedRate;
     }
 
     public void fetch(double tradePrice) {
-        this.valAmount = tradePrice * volume;
-        this.proceeds = this.valAmount - this.allPrice;
-        this.proceedRate = this.proceeds / this.allPrice * 100;
+        this.valAmount = new BigDecimal(tradePrice * volume).setScale(2, HALF_UP).doubleValue();
+        this.proceeds = new BigDecimal(this.valAmount - this.allPrice).setScale(2, HALF_UP).doubleValue();
+        double proceedRate = new BigDecimal(this.proceeds / this.allPrice * 100).setScale(2, HALF_UP).doubleValue();
+        this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
+        this.proceedRate = proceedRate;
     }
 
     public boolean isEmpty() {
         return Objects.isNull(volume) || volume == 0;
+    }
+
+    public boolean isMaxProceedRateFall() {
+        if (this.proceedRate < 5) return false;
+        return this.maxProceedRate > 5 && this.maxProceedRate - 2 >= this.proceedRate;
     }
 }

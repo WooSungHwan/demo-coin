@@ -54,12 +54,15 @@ public class BackTestOrders {
     @Column(name = "proceed_rate")
     private Double proceedRate;
 
-    public static BackTestOrders of(MarketType market, OrdSideType side, Double price, Double volume, Double fee, long timestamp, Double proceeds, Double proceedRate) {
-        return new BackTestOrders(null, market, side, price, volume, fee, LocalDateTime.now(), timestamp, proceeds, proceedRate);
+    @Column(name = "max_proceed_rate")
+    private Double maxProceedRate;
+
+    public static BackTestOrders of(MarketType market, OrdSideType side, Double price, Double volume, Double fee, long timestamp, Double proceeds, Double proceedRate, Double maxProceedRate) {
+        return new BackTestOrders(null, market, side, price, volume, fee, LocalDateTime.now(), timestamp, proceeds, proceedRate, maxProceedRate);
     }
 
     public static BackTestOrders of(MarketType market, OrdSideType side, Double price, Double volume, Double fee, long timestamp) {
-        return new BackTestOrders(null, market, side, price, volume, fee, LocalDateTime.now(), timestamp, null, null);
+        return new BackTestOrders(null, market, side, price, volume, fee, LocalDateTime.now(), timestamp, null, null, null);
     }
 
 }

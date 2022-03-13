@@ -26,19 +26,19 @@ public interface FiveMinutesCandleRepository extends JpaRepository<FiveMinutesCa
 
     /**
      * 해당 시점을 포함하여 이전 캔들 200개 가져온다.
-     * @param timstamp
+     * @param timestamp
      * @return
      */
-    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE market = :market AND timestamp <= :timestamp ORDER BY candle_date_time_kst DESC LIMIT 200")
+    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE market = :market AND timestamp <= :timestamp ORDER BY timestamp DESC LIMIT 200")
     List<FiveMinutesCandle> findFiveMinutesCandlesUnderByTimestamp(@Param("market") String market,
-                                                                   @Param("timestamp") long timstamp);
+                                                                   @Param("timestamp") long timestamp);
 
     /**
      * 해당 timestamp값의 다음 캔들을 가져온다.
      * @param timestamp
      * @return
      */
-    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE market = :market AND timestamp > :timestamp ORDER BY candle_date_time_kst LIMIT 1")
+    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE market = :market AND timestamp > :timestamp ORDER BY timestamp LIMIT 1")
     FiveMinutesCandle nextCandle(@Param("timestamp") long timestamp,
                                  @Param("market") String market);
 }

@@ -46,7 +46,19 @@ public class BollingerBands {
         double udd4 = udd.get(3).doubleValue();
         double udd5 = udd.get(4).doubleValue();
 
-        if (udd5 < udd4 && udd4 < udd3 && udd3 < udd2 && udd2 <= udd1) {
+        double ldd1 = ldd.get(0).doubleValue();
+        double ldd2 = ldd.get(1).doubleValue();
+        double ldd3 = ldd.get(2).doubleValue();
+        double ldd4 = ldd.get(3).doubleValue();
+        double ldd5 = ldd.get(4).doubleValue();
+
+        double interval1 = udd1 - ldd1;
+        double interval2 = udd2 - ldd2;
+        double interval3 = udd3 - ldd3;
+        double interval4 = udd4 - ldd4;
+        double interval5 = udd5 - ldd5;
+
+        if (interval5 >= interval4 && interval4 >= interval3 && interval3 >= interval2 && interval2 < interval1) {
             return true;
         }
 
@@ -64,7 +76,32 @@ public class BollingerBands {
         double udd4 = udd.get(3).doubleValue();
         double udd5 = udd.get(4).doubleValue();
 
-        if (udd5 < udd4 && udd4 < udd3 && udd3 < udd2 && udd2 >= udd1) {
+        double ldd1 = ldd.get(0).doubleValue();
+        double ldd2 = ldd.get(1).doubleValue();
+        double ldd3 = ldd.get(2).doubleValue();
+        double ldd4 = ldd.get(3).doubleValue();
+        double ldd5 = ldd.get(4).doubleValue();
+
+        double interval1 = udd1 - ldd1;
+        double interval2 = udd2 - ldd2;
+        double interval3 = udd3 - ldd3;
+        double interval4 = udd4 - ldd4;
+        double interval5 = udd5 - ldd5;
+
+        if (interval5 < interval4 && interval4 < interval3 && interval3 < interval2 && interval2 >= interval1) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isLddChangeUp() {
+        double ldd1 = ldd.get(0).doubleValue();
+        double ldd2 = ldd.get(1).doubleValue();
+        double ldd3 = ldd.get(2).doubleValue();
+        double ldd4 = ldd.get(3).doubleValue();
+        double ldd5 = ldd.get(4).doubleValue();
+
+        if (ldd5 >= ldd4 && ldd4 >= ldd3 && ldd3 >= ldd2 && ldd2 < ldd1) {
             return true;
         }
         return false;

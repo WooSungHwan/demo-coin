@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
+import static com.example.democoin.upbit.enums.MarketType.KRW_BTC;
 import static com.example.democoin.upbit.enums.MarketUnit.KRW;
 import static com.example.democoin.upbit.enums.OrdSideType.ASK;
 import static com.example.democoin.upbit.enums.OrdSideType.BID;
@@ -112,15 +113,20 @@ class DemoCoinApplicationTests {
         System.out.println();
 */
 
-//        List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, "KRW-BTC", 200, LocalDateTime.now().minusMinutes(5));
+//        List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, KRW_BTC, 200, LocalDateTime.now().minusMinutes(5));
 //        List<Double> prices = minuteCandles.stream().map(MinuteCandle::getTradePrice).collect(Collectors.toList());
-//        BollingerBands bollingerBands = getBollingerBands(prices);
+//        BollingerBands bollingerBands = Indicator.getBollingerBands(prices);
 
-
+//        System.out.println();
 //        backTesting();
-        backTesting2();
+//        backTesting2();
 
+//        List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, KRW_BTC, 26, LocalDateTime.now().minusMinutes(5));
 
+        List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(KRW_BTC.getType(), LocalDateTime.of(2022,3,1,0,0,0), 100, 0);
+        
+
+        System.out.println();
 //        주문예제();
     }
 
