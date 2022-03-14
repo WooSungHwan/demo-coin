@@ -1,4 +1,4 @@
-package com.example.democoin;
+package com.example.democoin.indicator.result;
 
 import lombok.Value;
 

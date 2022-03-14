@@ -1,6 +1,6 @@
 package com.example.democoin.upbit.enums;
 
-import com.example.democoin.EnumInterfaceConverter;
+import com.example.democoin.configuration.enums.EnumInterfaceConverter;
 import com.example.democoin.configuration.enums.EnumInterface;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;

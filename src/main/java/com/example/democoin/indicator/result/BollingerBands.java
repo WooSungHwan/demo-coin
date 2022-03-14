@@ -1,4 +1,4 @@
-package com.example.democoin;
+package com.example.democoin.indicator.result;
 
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import lombok.Value;
@@ -6,7 +6,6 @@ import lombok.Value;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Value(staticConstructor = "of")
 public class BollingerBands {
@@ -36,7 +35,7 @@ public class BollingerBands {
     }
 
     /**
-     * 볼린저 밴드 간격 줄어듬(표준편차 감소)
+     * (5개봉) 볼린저 밴드 간격 줄어듬(표준편차 감소)
      * @return
      */
     public boolean isReduceFiveCandle() {
@@ -59,6 +58,42 @@ public class BollingerBands {
         double interval5 = udd5 - ldd5;
 
         if (interval5 >= interval4 && interval4 >= interval3 && interval3 >= interval2 && interval2 < interval1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * (7개봉) 볼린저 밴드 간격 줄어듬(표준편차 감소)
+     * @return
+     */
+    public boolean isReduceSevenCandle() {
+        double udd1 = udd.get(0).doubleValue();
+        double udd2 = udd.get(1).doubleValue();
+        double udd3 = udd.get(2).doubleValue();
+        double udd4 = udd.get(3).doubleValue();
+        double udd5 = udd.get(4).doubleValue();
+        double udd6 = udd.get(5).doubleValue();
+        double udd7 = udd.get(6).doubleValue();
+
+        double ldd1 = ldd.get(0).doubleValue();
+        double ldd2 = ldd.get(1).doubleValue();
+        double ldd3 = ldd.get(2).doubleValue();
+        double ldd4 = ldd.get(3).doubleValue();
+        double ldd5 = ldd.get(4).doubleValue();
+        double ldd6 = ldd.get(5).doubleValue();
+        double ldd7 = ldd.get(6).doubleValue();
+
+        double interval1 = udd1 - ldd1;
+        double interval2 = udd2 - ldd2;
+        double interval3 = udd3 - ldd3;
+        double interval4 = udd4 - ldd4;
+        double interval5 = udd5 - ldd5;
+        double interval6 = udd6 - ldd6;
+        double interval7 = udd7 - ldd7;
+
+        if (interval7 >= interval7 && interval6 >= interval6 && interval5 >= interval4 && interval4 >= interval3 && interval3 >= interval2 && interval2 < interval1) {
             return true;
         }
 

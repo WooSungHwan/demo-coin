@@ -1,6 +1,8 @@
-package com.example.democoin;
+package com.example.democoin.utils;
 
-import com.example.democoin.indicator.RSI;
+import com.example.democoin.indicator.raw.RSI;
+import com.example.democoin.indicator.result.BollingerBands;
+import com.example.democoin.indicator.result.RSIs;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import java.math.BigDecimal;
@@ -12,7 +14,7 @@ import java.util.stream.Collectors;
 
 import static java.math.RoundingMode.HALF_UP;
 
-public class Indicator {
+public class IndicatorUtil {
 
     /**
      * 볼린져밴드
@@ -82,5 +84,9 @@ public class Indicator {
         return RSIs.of(Arrays.stream(rsi.count(rawDoubles))
                 .boxed()
                 .collect(Collectors.toUnmodifiableList()));
+    }
+
+    public static double fee(double price) {
+        return price * 0.0005;
     }
 }

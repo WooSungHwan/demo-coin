@@ -8,12 +8,15 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import javax.annotation.PostConstruct;
+import java.text.DecimalFormat;
 import java.util.TimeZone;
 
 @EnableScheduling
 @EnableConfigurationProperties({UpbitProperties.class, SlackProperties.class})
 @SpringBootApplication
 public class DemoCoinApplication {
+
+    public static DecimalFormat df = new DecimalFormat("###,###"); // 출력 숫자 포맷
 
     public static void main(String[] args) {
         SpringApplication.run(DemoCoinApplication.class, args);

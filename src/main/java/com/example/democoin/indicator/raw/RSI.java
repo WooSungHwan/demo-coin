@@ -1,4 +1,4 @@
-package com.example.democoin.indicator;
+package com.example.democoin.indicator.raw;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

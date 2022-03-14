@@ -1,4 +1,4 @@
-package com.example.democoin.indicator;
+package com.example.democoin.indicator.raw;
 
 import org.apache.commons.math3.stat.StatUtils;
 

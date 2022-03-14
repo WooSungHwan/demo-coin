@@ -1,4 +1,4 @@
-package com.example.democoin;
+package com.example.democoin.configuration.enums;
 
 import com.example.democoin.configuration.enums.EnumInterface;
 import org.apache.commons.lang3.StringUtils;

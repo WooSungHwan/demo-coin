@@ -1,6 +1,5 @@
 package com.example.democoin;
 
-import com.example.democoin.backtest.BackTest;
 import com.example.democoin.backtest.BackTest2;
 import com.example.democoin.backtest.common.AccountCoinWalletRepository;
 import com.example.democoin.configuration.properties.UpbitProperties;
@@ -43,7 +42,6 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import static com.example.democoin.upbit.enums.MarketType.KRW_BTC;
 import static com.example.democoin.upbit.enums.MarketUnit.KRW;
 import static com.example.democoin.upbit.enums.OrdSideType.ASK;
 import static com.example.democoin.upbit.enums.OrdSideType.BID;
@@ -104,7 +102,7 @@ class DemoCoinApplicationTests {
 //        주문예제();
 //        List<OrderResult> orderList = 주문목록조회();
 //        주문취소(orderList.get(0).getUuid());
-//        오늘_가장최근수집된일자_수집(MarketType.KRW_ETH);
+//        오늘_가장최근수집된일자_수집(MarketType.KRW_BTC);
 //        오늘_최초캔들생성일자_수집(MarketType.KRW_XRP);
 /*
         double[] bitcoins = {4600000}; //fiveMinutesCandleRepository.findFiveMinutesCandlesByLimit(500);
@@ -119,26 +117,19 @@ class DemoCoinApplicationTests {
 
 //        System.out.println();
 //        backTesting();
-//        backTesting2();
+        backTesting2();
 
 //        List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, KRW_BTC, 26, LocalDateTime.now().minusMinutes(5));
 
-        List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(KRW_BTC.getType(), LocalDateTime.of(2022,3,1,0,0,0), 100, 0);
-        
+//        List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(KRW_BTC.getType(), LocalDateTime.of(2022,3,1,0,0,0), 100, 0);
 
-        System.out.println();
+
+//        System.out.println();
 //        주문예제();
     }
 
     @Autowired
-    private BackTest backTest;
-
-    @Autowired
     private BackTest2 backTest2;
-
-    private void backTesting() {
-        backTest.start();
-    }
 
     private void backTesting2() {
         backTest2.start();
