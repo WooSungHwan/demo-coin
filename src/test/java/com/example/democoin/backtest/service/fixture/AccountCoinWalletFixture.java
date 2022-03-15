@@ -20,6 +20,14 @@ public class AccountCoinWalletFixture {
                 .build();
     }
 
+    public static AccountCoinWallet bidWallet() {
+        return AccountCoinWallet.builder()
+                .id(1L)
+                .balance(1000d)
+                .market(MarketType.KRW_BTC)
+                .build();
+    }
+
     public static AccountCoinWallet emptyWallet() {
         return AccountCoinWallet.builder()
                 .id(1L)
