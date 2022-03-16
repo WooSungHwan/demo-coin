@@ -28,6 +28,21 @@ public class AccountCoinWalletFixture {
                 .build();
     }
 
+    public static AccountCoinWallet askWallet() {
+        return AccountCoinWallet.builder()
+                .id(1L)
+                .allPrice(1000d)
+                .balance(0d)
+                .market(MarketType.KRW_BTC)
+                .avgPrice(10000d)
+                .maxProceedRate(1.2d)
+                .proceeds(10d)
+                .valAmount(1010d)
+                .proceedRate(1.2d)
+                .volume(10d)
+                .build();
+    }
+
     public static AccountCoinWallet emptyWallet() {
         return AccountCoinWallet.builder()
                 .id(1L)
