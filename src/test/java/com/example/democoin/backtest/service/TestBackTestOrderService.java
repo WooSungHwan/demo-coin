@@ -1,9 +1,9 @@
 package com.example.democoin.backtest.service;
 
-import com.example.democoin.backtest.common.AccountCoinWallet;
-import com.example.democoin.backtest.common.AccountCoinWalletRepository;
-import com.example.democoin.backtest.common.BackTestOrders;
-import com.example.democoin.backtest.common.BackTestOrdersRepository;
+import com.example.democoin.backtest.entity.AccountCoinWallet;
+import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
+import com.example.democoin.backtest.entity.BackTestOrders;
+import com.example.democoin.backtest.repository.BackTestOrdersRepository;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.utils.NumberUtils;
 import lombok.extern.slf4j.Slf4j;

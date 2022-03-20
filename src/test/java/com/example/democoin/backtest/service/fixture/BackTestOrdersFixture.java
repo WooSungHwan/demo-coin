@@ -1,6 +1,6 @@
 package com.example.democoin.backtest.service.fixture;
 
-import com.example.democoin.backtest.common.BackTestOrders;
+import com.example.democoin.backtest.entity.BackTestOrders;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.enums.OrdSideType;

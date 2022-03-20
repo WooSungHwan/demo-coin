@@ -20,7 +20,7 @@ public class FiveMinutesCandleServiceImpl implements FiveMinutesCandleService {
 
     @Override
     public List<FiveMinutesCandle> findFiveMinutesCandlesLimitOffset(String market, LocalDateTime of, int limit, int offset) {
-        return fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(market, LocalDateTime.of(2022, 1, 1, 0, 0, 0), limit, offset);
+        return fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(market, of, limit, offset);
     }
 
     @Override

@@ -1,8 +1,7 @@
 package com.example.democoin.backtest.service;
 
-import com.example.democoin.backtest.common.AccountCoinWallet;
-import com.example.democoin.backtest.common.AccountCoinWalletRepository;
-import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
+import com.example.democoin.backtest.entity.AccountCoinWallet;
+import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.upbit.enums.MarketType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,5 +43,10 @@ public class AccountCoinWalletServiceImpl implements AccountCoinWalletService {
             return accountCoinWalletRepository.save(wallet);
         }
         return wallet;
+    }
+
+    @Override
+    public AccountCoinWallet getWalletByMarket(MarketType market) {
+        return accountCoinWalletRepository.findByMarket(market);
     }
 }

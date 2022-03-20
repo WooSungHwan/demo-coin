@@ -1,7 +1,12 @@
 package com.example.democoin;
 
 import com.example.democoin.backtest.BackTest2;
-import com.example.democoin.backtest.common.AccountCoinWalletRepository;
+import com.example.democoin.backtest.entity.ResultInfo;
+import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
+import com.example.democoin.backtest.repository.ResultInfoJdbcTemplate;
+import com.example.democoin.backtest.repository.ResultInfoRepository;
+import com.example.democoin.backtest.strategy.ask.AskStrategy;
+import com.example.democoin.backtest.strategy.bid.BidStrategy;
 import com.example.democoin.configuration.properties.UpbitProperties;
 import com.example.democoin.slack.SlackMessageService;
 import com.example.democoin.task.service.ScheduleService;
@@ -28,6 +33,7 @@ import com.example.democoin.upbit.result.orders.OrderCancelResult;
 import com.example.democoin.upbit.result.orders.OrderResult;
 import com.example.democoin.upbit.result.orders.SingleOrderResult;
 import com.example.democoin.utils.JsonUtil;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,6 +95,11 @@ class DemoCoinApplicationTests {
 
     @Autowired
     private SlackMessageService slackMessageService;
+
+    @Autowired
+    private ResultInfoJdbcTemplate resultInfoJdbcTemplate;
+    @Autowired
+    private ResultInfoRepository resultInfoRepository;
 
 //    @Transactional
     @Test

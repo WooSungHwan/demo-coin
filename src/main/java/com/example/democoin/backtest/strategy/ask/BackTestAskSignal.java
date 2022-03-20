@@ -3,13 +3,15 @@ package com.example.democoin.backtest.strategy.ask;
 import com.example.democoin.indicator.result.BollingerBands;
 import com.example.democoin.utils.IndicatorUtil;
 import com.example.democoin.indicator.result.RSIs;
-import com.example.democoin.backtest.common.AccountCoinWallet;
+import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.example.democoin.utils.IndicatorUtil.fee;
 
 @Slf4j
 public class BackTestAskSignal {
@@ -18,13 +20,12 @@ public class BackTestAskSignal {
      * 볼린저 밴드 상단 터치 , rsi14 65 이상
      * @param rsi14
      * @param bollingerBands
-     * @param candle
      * @return
      */
-    public static boolean strategy_1(AccountCoinWallet wallet, RSIs rsi14, BollingerBands bollingerBands, FiveMinutesCandle candle, FiveMinutesCandle targetCandle) {
+    public static boolean strategy_1(AccountCoinWallet wallet, RSIs rsi14, BollingerBands bollingerBands, FiveMinutesCandle targetCandle) {
         if (isWalletPercent(wallet, targetCandle)) return true;
 
-        if (rsi14.isOver(65) && bollingerBands.isBollingerBandUddTouch(candle)) {
+        if (rsi14.isOver(65) && bollingerBands.isBollingerBandUddTouch(targetCandle)) {
             log.info("{} 해당 코인 매도 신호 발생, KST 캔들 시각 : {}, rsi : {}, 볼밴 상단 : {}",
                     targetCandle.getMarket(), targetCandle.getCandleDateTimeKst(), rsi14.getRsi().get(0), bollingerBands.getLdd().get(0));
             return true;
@@ -44,6 +45,7 @@ public class BackTestAskSignal {
     }
 
     public static boolean strategy_3(AccountCoinWallet wallet, List<FiveMinutesCandle> candles) {
+        if (isWalletPercent(wallet, candles.get(0))) return true;
         return false;
     }
 
@@ -129,6 +131,11 @@ public class BackTestAskSignal {
     }
 
     private static boolean isWalletPercent(AccountCoinWallet wallet, FiveMinutesCandle targetCandle) {
+        // 수수료 보다 작을시 안판다.
+        if (wallet.getProceeds() > 0 && wallet.getProceeds() < fee(wallet.getValAmount())) {
+            return false;
+        }
+
         if (wallet.isMaxProceedRateFall()) {
             log.info("{} 해당 코인 매도 신호 발생, KST 캔들 시각 : {}, 최대 수익률 대비 하락 매도!! 수익률 : {}",
                     targetCandle.getMarket(), targetCandle.getCandleDateTimeKst(), wallet.getProceedRate());
@@ -140,6 +147,36 @@ public class BackTestAskSignal {
                     targetCandle.getMarket(), targetCandle.getCandleDateTimeKst(), wallet.getProceedRate());
             return true;
         }
+        return false;
+    }
+
+    // 볼린저 밴드 상한선 하향돌파 또는 rsi 70 하향 돌파
+    public static boolean strategy_9(AccountCoinWallet wallet,
+                                     BollingerBands bollingerBands,
+                                     RSIs rsi14,
+                                     List<FiveMinutesCandle> candles,
+                                     FiveMinutesCandle targetCandle) {
+        if (isWalletPercent(wallet, targetCandle)) return true;
+
+        double beforeBB = bollingerBands.getUdd().get(1).doubleValue();
+        double nowBB = bollingerBands.getUdd().get(0).doubleValue();
+        double beforePrice = candles.get(1).getTradePrice();
+        double nowPrice = candles.get(0).getTradePrice();
+
+        // 볼린저 밴드 상한선 하향 돌파
+        if (beforeBB <= beforePrice && nowBB > nowPrice) {
+            log.info("{} 해당 코인 매도 신호 발생, KST 캔들 시각 : {}, 볼밴 상단선 하향돌파 포착!!",
+                    candles.get(0).getMarket(), candles.get(0).getCandleDateTimeKst());
+            return true;
+        }
+
+        // rsi 70 상향돌파 매도
+        if (rsi14.isUndering(70)) {
+            log.info("{} 해당 코인 매도 신호 발생, KST 캔들 시각 : {}, rsi 70 상향돌파 포착!! 이전 rsi : {} / 이후 rsi : {}",
+                    candles.get(0).getMarket(), candles.get(0).getCandleDateTimeKst(), rsi14.getRsi().get(1), rsi14.getRsi().get(0));
+            return true;
+        }
+
         return false;
     }
 }

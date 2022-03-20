@@ -1,7 +1,7 @@
 package com.example.democoin.backtest.service;
 
-import com.example.democoin.backtest.common.AccountCoinWallet;
-import com.example.democoin.backtest.common.BackTestOrders;
+import com.example.democoin.backtest.entity.AccountCoinWallet;
+import com.example.democoin.backtest.entity.BackTestOrders;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 
 public interface BackTestOrderService {

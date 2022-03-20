@@ -88,4 +88,9 @@ public class FiveMinutesCandle {
     public boolean isPositive() {
         return getCandlePercent() > 0;
     }
+
+    // 캔들 음봉 여부
+    public boolean isNegative() {
+        return !isPositive();
+    }
 }

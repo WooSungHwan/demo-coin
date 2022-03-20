@@ -1,9 +1,9 @@
 package com.example.democoin.backtest.service;
 
-import com.example.democoin.backtest.common.AccountCoinWallet;
-import com.example.democoin.backtest.common.AccountCoinWalletRepository;
-import com.example.democoin.backtest.common.BackTestOrders;
-import com.example.democoin.backtest.common.BackTestOrdersRepository;
+import com.example.democoin.backtest.entity.AccountCoinWallet;
+import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
+import com.example.democoin.backtest.entity.BackTestOrders;
+import com.example.democoin.backtest.repository.BackTestOrdersRepository;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.utils.NumberUtils;
 import lombok.RequiredArgsConstructor;
@@ -11,13 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-
 import static com.example.democoin.DemoCoinApplication.df;
 import static com.example.democoin.utils.IndicatorUtil.fee;
 import static com.example.democoin.upbit.enums.OrdSideType.ASK;
 import static com.example.democoin.upbit.enums.OrdSideType.BID;
-import static java.math.RoundingMode.HALF_UP;
 
 @Transactional(readOnly = true)
 @Slf4j
@@ -31,16 +28,17 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
     @Transactional
     @Override
     public BackTestOrders bid(FiveMinutesCandle targetCandle, AccountCoinWallet wallet) { // 매수
-        double openingPrice = targetCandle.getTradePrice();
+        double openingPrice = targetCandle.getOpeningPrice();
         double fee = fee(wallet.getBalance());
-        double bidAmountWithFee = wallet.getBalance() - fee;
-        double volume = bidAmountWithFee / openingPrice; // 매수량
+        double bidAmount = wallet.getBalance();
+        double volume = bidAmount / openingPrice; // 매수량
 
         // 다음 캔들 시가에 매수
-        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(targetCandle.getMarket(), BID, targetCandle.getTradePrice(), volume, fee, targetCandle.getTimestamp()));
+        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(targetCandle.getMarket(), BID, openingPrice, volume, fee, targetCandle.getTimestamp()));
 
-        wallet.allBid(openingPrice, bidAmountWithFee, volume);
+        wallet.allBid(openingPrice, bidAmount, volume, fee);
         accountCoinWalletRepository.save(wallet);
+
         log.info("{} 매수 발생 !! ---- 매수가 {}원 / 매수 볼륨 {}", targetCandle.getMarket(), df.format(openingPrice), volume);
 
         return order;
@@ -54,10 +52,13 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
             return null;
         }
         double volume = wallet.getVolume();
-        double valAmount = BigDecimal.valueOf(targetCandle.getTradePrice() * volume).setScale(2, HALF_UP).doubleValue();
+//        double valAmount = BigDecimal.valueOf(targetCandle.getTradePrice() * volume).setScale(2, HALF_UP).doubleValue();
+        double valAmount = targetCandle.getTradePrice() * volume;
         double fee = fee(valAmount);
-        double proceeds = BigDecimal.valueOf(valAmount - wallet.getAllPrice()).setScale(2, HALF_UP).doubleValue();
-        double proceedRate = BigDecimal.valueOf(proceeds / wallet.getAllPrice() * 100).setScale(2, HALF_UP).doubleValue();
+//        double proceeds = BigDecimal.valueOf(valAmount - wallet.getAllPrice()).setScale(2, HALF_UP).doubleValue();
+//        double proceedRate = BigDecimal.valueOf(proceeds / wallet.getAllPrice() * 100).setScale(2, HALF_UP).doubleValue();
+        double proceeds = valAmount - wallet.getAllPrice();
+        double proceedRate = proceeds / wallet.getAllPrice() * 100;
         double maxProceedRate = NumberUtils.max(wallet.getMaxProceedRate(), proceedRate);
 
         log.info("{} 매도 발생 !! ---- 수익률 {}% 매도가 : {} / 매도 볼륨 {}, "
@@ -69,7 +70,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
         BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(
                 wallet.getMarket(),
                 ASK,
-                targetCandle.getTradePrice(),
+                targetCandle.getOpeningPrice(),
                 volume, fee, targetCandle.getTimestamp(),
                 proceeds,
                 proceedRate,

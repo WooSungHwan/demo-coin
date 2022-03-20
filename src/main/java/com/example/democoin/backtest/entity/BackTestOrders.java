@@ -1,4 +1,4 @@
-package com.example.democoin.backtest.common;
+package com.example.democoin.backtest.entity;
 
 import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.enums.OrdSideType;
@@ -11,7 +11,6 @@ import javax.persistence.*;
 
 import java.time.LocalDateTime;
 
-import static javax.persistence.EnumType.STRING;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 

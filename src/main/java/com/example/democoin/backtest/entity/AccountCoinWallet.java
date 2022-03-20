@@ -1,4 +1,4 @@
-package com.example.democoin.backtest.common;
+package com.example.democoin.backtest.entity;
 
 import com.example.democoin.upbit.enums.MarketType;
 import lombok.*;
@@ -67,7 +67,7 @@ public class AccountCoinWallet {
     }
 
     public void allAsk(double valAmount, double fee) {
-        this.balance = valAmount;
+        this.balance = valAmount - fee;
         this.avgPrice = null;
         this.volume = null;
         this.allPrice = null;
@@ -75,22 +75,36 @@ public class AccountCoinWallet {
         this.valAmount = null;
         this.proceedRate = null;
         this.maxProceedRate = null;
-        this.balance = new BigDecimal(this.balance).setScale(2, HALF_UP).doubleValue();
+//        this.balance = new BigDecimal(this.balance).setScale(2, HALF_UP).doubleValue();
     }
 
-    public void allBid(double tradePrice, double bidAmount, double volume) {
+    public void allBid(double tradePrice, double bidAmount, double volume, double fee) {
         this.avgPrice = tradePrice;
         this.volume = volume;
-        this.allPrice = bidAmount;
-        this.valAmount = new BigDecimal(bidAmount).setScale(2, HALF_UP).doubleValue();
+        this.allPrice = bidAmount - fee;
+//        this.valAmount = new BigDecimal(bidAmount).setScale(2, HALF_UP).doubleValue();
+        this.valAmount = bidAmount - fee;
         this.balance = 0d;
-        setProceeds();
+
+        this.proceeds = this.valAmount - this.allPrice;
+        double proceedRate = this.proceeds / this.allPrice * 100;
+        this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
+        this.proceedRate = proceedRate;
+
+//        setProceeds();
     }
 
     public void fetch(double tradePrice) {
         if (!isEmpty()) {
-            this.valAmount = new BigDecimal(tradePrice * this.volume).setScale(2, HALF_UP).doubleValue();
-            setProceeds();
+//            this.valAmount = new BigDecimal(tradePrice * this.volume).setScale(2, HALF_UP).doubleValue();
+
+            this.valAmount = tradePrice * this.volume;
+            this.proceeds = this.valAmount - this.allPrice;
+            double proceedRate = this.proceeds / this.allPrice * 100;
+            this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
+            this.proceedRate = proceedRate;
+
+//            setProceeds();
         }
     }
 
@@ -116,7 +130,7 @@ public class AccountCoinWallet {
     }
 
     public String getWalletInfo() {
-        return String.format("[%s] 평단가 : %s, 최대수익률 : %s%, 수익률 : %s%, 수익금 : %s, 평가금액 : %s"
+        return String.format("[%s] 평단가 : %s, 최대수익률 : %s%%, 수익률 : %s%%, 수익금 : %s, 평가금액 : %s"
                 , this.market.getName() // 코인 시장
                 , df.format(this.getAvgPrice()) // 평단가
                 , this.getMaxProceedRate() // 최대 수익률

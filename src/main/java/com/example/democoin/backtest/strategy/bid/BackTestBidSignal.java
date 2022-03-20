@@ -31,26 +31,13 @@ public class BackTestBidSignal {
         return false;
     }
 
+    // 단순 음봉 3개 발생시 매수
     public static boolean strategy_3(List<FiveMinutesCandle> candles, FiveMinutesCandle targetCandle) {
-        FiveMinutesCandle baseCandle0 = candles.get(0);
-        FiveMinutesCandle baseCandle1 = candles.get(1);
-        FiveMinutesCandle baseCandle2 = candles.get(2);
-        FiveMinutesCandle baseCandle3 = candles.get(3);
-        FiveMinutesCandle baseCandle4 = candles.get(4);
-        FiveMinutesCandle baseCandle5 = candles.get(5);
-        FiveMinutesCandle baseCandle6 = candles.get(6);
-        FiveMinutesCandle baseCandle7 = candles.get(7);
-
-        int tick = 0;
-        for (int i = 0; i < 10; i++) {
-            FiveMinutesCandle baseCandle = candles.get(i);
-            FiveMinutesCandle beforeTargetCandle = candles.get(i + 1);
-
-            if (!baseCandle.isPositive()) {
-                // 현재 타겟 캔들이 음봉
-            }
+        if (candles.stream().limit(3).allMatch(FiveMinutesCandle::isNegative)) {
+            log.info("{} 해당 코인 매수 신호 발생, KST 캔들 시각 : {}, 5분봉 음봉 3개 발생!!",
+                    targetCandle.getMarket(), targetCandle.getCandleDateTimeKst());
+            return true;
         }
-
         return false;
     }
 
@@ -124,6 +111,67 @@ public class BackTestBidSignal {
             return true;
         }
 
+        return false;
+    }
+
+    // 볼린저밴드 하단선 상향돌파 / 200 이평선 돌파 또는 rsi 30 상향 돌파
+    public static boolean strategy_8(BollingerBands bollingerBands,
+                                     RSIs rsi14,
+                                     List<FiveMinutesCandle> candles,
+                                     FiveMinutesCandle targetCandle) {
+        List<BigDecimal> sma200 = IndicatorUtil.getSMAList(199, candles.stream().map(FiveMinutesCandle::getTradePrice).collect(Collectors.toList()));
+
+        if (bbAndsma200Overing(sma200, candles, bollingerBands)) return true;
+
+        // rsi14 30 상향돌파
+        if (rsi14.isOvering(30)) {
+            log.info("{} 해당 코인 매수 신호 발생, KST 캔들 시각 : {}, rsi 30 상향돌파 포착!! rsi : {}",
+                    candles.get(0).getMarket(), candles.get(0).getCandleDateTimeKst(), rsi14.getRsi().get(0));
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean strategy_9(BollingerBands bollingerBands,
+                                     List<FiveMinutesCandle> candles) {
+        List<BigDecimal> sma200 = IndicatorUtil.getSMAList(199, candles.stream().map(FiveMinutesCandle::getTradePrice).collect(Collectors.toList()));
+        if (bbAndsma200Overing(sma200, candles, bollingerBands)) return true;
+
+        return false;
+
+    }
+
+    // 볼린저밴드 7개봉 수축 / 200 이평 이상 or 볼린저밴드 하단선 상향돌파 / 200 이평선 돌파
+    public static boolean strategy_10(BollingerBands bollingerBands, List<FiveMinutesCandle> candles) {
+        List<BigDecimal> sma200 = IndicatorUtil.getSMAList(199, candles.stream().map(FiveMinutesCandle::getTradePrice).collect(Collectors.toList()));
+
+        // 볼린저밴드 하단선 상향돌파 / 200 이평선 돌파
+        if (bbAndsma200Overing(sma200, candles, bollingerBands)) return true;
+
+        // 볼린저밴드 7개봉 수축 / 200 이평 이상
+        if (bollingerBands.isReduceSevenCandle() && sma200.get(0).doubleValue() <= candles.get(0).getTradePrice()) {
+            log.info("{} 해당 코인 매수 신호 발생, KST 캔들 시각 : {}, 볼밴 7개봉 수축, 200 이평 이상!!",
+                    candles.get(0).getMarket(), candles.get(0).getCandleDateTimeKst());
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean bbAndsma200Overing(List<BigDecimal> sma200, List<FiveMinutesCandle> candles, BollingerBands bollingerBands) {
+        double nowSma = sma200.get(0).doubleValue();
+        double beforeSma = sma200.get(1).doubleValue();
+        double nowPrice = candles.get(0).getTradePrice();
+        double beforePrice = candles.get(1).getTradePrice();
+        double beforeBB = bollingerBands.getLdd().get(1).doubleValue();
+        double nowBB = bollingerBands.getLdd().get(0).doubleValue();
+
+        // 이평선 200 상향돌파 && 볼린져 밴드 하단선 상향 돌파
+        if (beforeSma > beforePrice && nowSma < nowPrice && beforeBB > beforePrice && nowBB < nowPrice) {
+            log.info("{} 해당 코인 매수 신호 발생, KST 캔들 시각 : {}, 볼밴 하단선, 200이평선 상향돌파 포착!!",
+                    candles.get(0).getMarket(), candles.get(0).getCandleDateTimeKst());
+            return true;
+        }
         return false;
     }
 }

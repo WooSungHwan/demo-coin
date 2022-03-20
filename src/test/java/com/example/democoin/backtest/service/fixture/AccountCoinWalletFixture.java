@@ -1,6 +1,6 @@
 package com.example.democoin.backtest.service.fixture;
 
-import com.example.democoin.backtest.common.AccountCoinWallet;
+import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.upbit.enums.MarketType;
 
 public class AccountCoinWalletFixture {

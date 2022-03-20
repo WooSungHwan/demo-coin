@@ -1,7 +1,7 @@
 package com.example.democoin.backtest.service;
 
-import com.example.democoin.backtest.common.AccountCoinWallet;
-import com.example.democoin.backtest.common.AccountCoinWalletRepository;
+import com.example.democoin.backtest.entity.AccountCoinWallet;
+import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.upbit.service.FiveMinutesCandleService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
