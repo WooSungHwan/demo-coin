@@ -59,6 +59,19 @@ public class IndicatorUtil {
         return prices20;
     }
 
+    public static List<Double> stdevList(int day, List<Double> values) {
+        List<Double> stdevList = new ArrayList<>();
+        for (int i = 0; i < values.size(); i++) {
+            int fromIndex = i;
+            int toIndex = i + day;
+            if (toIndex > values.size()) {
+                break;
+            }
+            stdevList.add(stdev(values.subList(fromIndex, toIndex)));
+        }
+        return stdevList;
+    }
+
     /**
      * 표준편차
      * @param values
