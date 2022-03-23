@@ -88,7 +88,7 @@ public class AccountCoinWallet {
 
         this.proceeds = this.valAmount - this.allPrice;
         double proceedRate = this.proceeds / this.allPrice * 100;
-        this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
+        this.maxProceedRate = NumberUtils.max(this.maxProceedRate, proceedRate);
         this.proceedRate = proceedRate;
 
 //        setProceeds();
@@ -101,7 +101,7 @@ public class AccountCoinWallet {
             this.valAmount = tradePrice * this.volume;
             this.proceeds = this.valAmount - this.allPrice;
             double proceedRate = this.proceeds / this.allPrice * 100;
-            this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
+            this.maxProceedRate = NumberUtils.max(this.maxProceedRate, proceedRate);
             this.proceedRate = proceedRate;
 
 //            setProceeds();
@@ -121,10 +121,12 @@ public class AccountCoinWallet {
 
     public boolean isMaxProceedRateFall() {
         if (!isEmpty()) {
-            if (this.proceedRate < 5) {
+            if (this.proceedRate < 3) {
                 return false;
             }
-            return this.maxProceedRate > 5 && this.maxProceedRate - 2 >= this.proceedRate;
+            if (this.maxProceedRate > 3) {
+                return this.maxProceedRate - 2 >= this.proceedRate;
+            }
         }
         return false;
     }

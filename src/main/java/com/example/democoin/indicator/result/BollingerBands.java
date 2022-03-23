@@ -16,6 +16,11 @@ public class BollingerBands {
 
     private List<BigDecimal> ldd; // 하단
 
+    /**
+     * 볼린저 밴드 하단선 터치
+     * @param candle
+     * @return
+     */
     public boolean isBollingerBandUddTouch(FiveMinutesCandle candle) {
         if (Objects.isNull(candle)) {
             return false;
@@ -25,13 +30,18 @@ public class BollingerBands {
         return highPrice >= uddValue;
     }
 
+    /**
+     * 볼린저 밴드 상단선 터치 상태
+     * @param candle
+     * @return
+     */
     public boolean isBollingerBandLddTouch(FiveMinutesCandle candle) {
         if (Objects.isNull(candle)) {
             return false;
         }
-        Double lowPrice = candle.getLowPrice();
+        Double tradePrice = candle.getTradePrice();
         double uddValue = ldd.get(0).doubleValue();
-        return uddValue >= lowPrice;
+        return uddValue > tradePrice;
     }
 
     /**
