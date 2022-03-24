@@ -4,6 +4,8 @@ import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.backtest.entity.BackTestOrders;
 import com.example.democoin.backtest.repository.BackTestOrdersRepository;
+import com.example.democoin.backtest.strategy.ask.AskReason;
+import com.example.democoin.backtest.strategy.bid.BidReason;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.utils.NumberUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +61,7 @@ class TestBackTestOrderService {
         when(backTestOrdersRepository.save(any())).thenReturn(backTestOrders);
 
         // then
-        BackTestOrders result = backTestOrderService.bid(targetCandle, wallet);
+        BackTestOrders result = backTestOrderService.bid(targetCandle, wallet, BidReason.find(backTestOrders.getReason()));
 
         assertThat(result).isEqualTo(backTestOrders);
     }
@@ -83,7 +85,7 @@ class TestBackTestOrderService {
         when(backTestOrdersRepository.save(any())).thenReturn(backTestOrders);
 
         // then
-        BackTestOrders result = backTestOrderService.ask(targetCandle, wallet);
+        BackTestOrders result = backTestOrderService.ask(targetCandle, wallet, AskReason.find(backTestOrders.getReason()));
 
         assertThat(result).isEqualTo(backTestOrders);
     }

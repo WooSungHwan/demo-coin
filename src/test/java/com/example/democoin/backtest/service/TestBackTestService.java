@@ -3,6 +3,8 @@ package com.example.democoin.backtest.service;
 import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.backtest.entity.BackTestOrders;
+import com.example.democoin.backtest.strategy.ask.AskReason;
+import com.example.democoin.backtest.strategy.bid.BidReason;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.service.FiveMinutesCandleService;
@@ -15,6 +17,8 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.example.democoin.backtest.strategy.ask.AskReason.LDD_CHANGE_UP;
+import static com.example.democoin.backtest.strategy.bid.BidReason.BB_REDUCE_FIVE_CANDLES;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -49,7 +53,7 @@ public class TestBackTestService {
         Double walletBalance = wallet.getBalance();
 
         // 첫째 캔들 매수
-        BackTestOrders order = backTestOrderService.bid(candles.get(0), wallet);
+        BackTestOrders order = backTestOrderService.bid(candles.get(0), wallet, BB_REDUCE_FIVE_CANDLES);
         AccountCoinWallet wallet1 = accountCoinWalletService.fetchWallet(marketType, candles.get(0).getTradePrice());
 
         double value = order.getVolume() * candles.get(0).getOpeningPrice();
@@ -61,7 +65,7 @@ public class TestBackTestService {
         assertThat(walletBalance).isEqualTo(wallet1.getValAmount() + order.getFee());
 
         // 둘째 캔들 매도
-        BackTestOrders order2 = backTestOrderService.ask(candles.get(1), wallet1);
+        BackTestOrders order2 = backTestOrderService.ask(candles.get(1), wallet1, LDD_CHANGE_UP);
         AccountCoinWallet wallet2 = accountCoinWalletService.fetchWallet(marketType, candles.get(1).getTradePrice());
         double orderAmount2 = order2.getPrice() * order2.getVolume();
 
@@ -71,7 +75,7 @@ public class TestBackTestService {
         walletBalance = wallet2.getBalance();
 
         // 셋째 캔들 매수
-        BackTestOrders order3 = backTestOrderService.bid(candles.get(2), wallet2);
+        BackTestOrders order3 = backTestOrderService.bid(candles.get(2), wallet2, BB_REDUCE_FIVE_CANDLES);
         AccountCoinWallet wallet3 = accountCoinWalletService.fetchWallet(marketType, candles.get(2).getTradePrice());
 
         orderAmount = order3.getPrice() * order3.getVolume();

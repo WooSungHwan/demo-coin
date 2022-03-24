@@ -1,12 +1,16 @@
 package com.example.democoin.backtest.service.fixture;
 
 import com.example.democoin.backtest.entity.BackTestOrders;
+import com.example.democoin.backtest.strategy.ask.AskReason;
+import com.example.democoin.backtest.strategy.bid.BidReason;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.enums.OrdSideType;
 
 import java.time.LocalDateTime;
 
+import static com.example.democoin.backtest.strategy.ask.AskReason.BB_UDD_UNDERING;
+import static com.example.democoin.backtest.strategy.bid.BidReason.RSI_OVERING;
 import static com.example.democoin.upbit.enums.OrdSideType.ASK;
 import static com.example.democoin.upbit.enums.OrdSideType.BID;
 
@@ -17,6 +21,7 @@ public class BackTestOrdersFixture {
                 .id(1L)
                 .market(MarketType.KRW_BTC)
                 .side(ordSideType)
+                .reason(ordSideType == ASK ? BB_UDD_UNDERING.getType() : RSI_OVERING.getType())
                 .volume(100d)
                 .price(1000d)
                 .fee(5d)
@@ -33,6 +38,7 @@ public class BackTestOrdersFixture {
                 .id(1L)
                 .market(targetCandle.getMarket())
                 .side(BID)
+                .reason(RSI_OVERING.getType())
                 .price(targetCandle.getTradePrice())
                 .volume(volume)
                 .fee(fee)
@@ -50,6 +56,7 @@ public class BackTestOrdersFixture {
                 .id(1L)
                 .market(targetCandle.getMarket())
                 .side(ASK)
+                .reason(BB_UDD_UNDERING.getType())
                 .price(targetCandle.getTradePrice())
                 .volume(volume)
                 .fee(fee)

@@ -9,8 +9,8 @@ public class FiveMinutesCandleFixture {
 
     public static FiveMinutesCandle standardFiveMinutesCandle() {
         return FiveMinutesCandle.builder()
-                .market(MarketType.KRW_BTC)
                 .id(1L)
+                .market(MarketType.KRW_BTC)
                 .candleAccTradePrice(100d)
                 .candleAccTradeVolume(1000d)
                 .candleDateTimeKst(LocalDateTime.now())
