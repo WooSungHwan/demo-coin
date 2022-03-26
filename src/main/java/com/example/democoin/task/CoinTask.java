@@ -6,6 +6,7 @@ import com.example.democoin.upbit.client.UpbitAllMarketClient;
 import com.example.democoin.upbit.client.UpbitCandleClient;
 import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.enums.MarketUnit;
+import com.example.democoin.upbit.enums.MinuteType;
 import com.example.democoin.upbit.result.candles.MinuteCandle;
 import com.example.democoin.upbit.result.market.MarketResult;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,7 @@ public class CoinTask {
             for (MarketType marketType : MarketType.marketTypeList) {
                 log.info("코인 : {} 5분봉 수집 시작", marketType.getName());
                 try {
-                    scheduleService.collectGetCoinFiveMinutesCandles(marketType);
+                    scheduleService.collectGetCoinCandles(MinuteType.FIVE, marketType);
                 } catch (Exception e) {
                     log.error("코인 : {} 5분봉 수집 중 에러가 발생\r\n 에러메시지 : {}", marketType.getName(), e.getMessage());
                     slackMessageService.message(String.format("%s 5분봉 수집 중 에러발생!! 에러메시지 : %s", marketType.getName(), e.getMessage()));

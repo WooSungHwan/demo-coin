@@ -5,8 +5,8 @@ import com.example.democoin.upbit.result.candles.MinuteCandle;
 import lombok.*;
 
 import javax.persistence.*;
+
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 import static java.math.RoundingMode.HALF_UP;
@@ -19,16 +19,16 @@ import static lombok.AccessLevel.PROTECTED;
 @AllArgsConstructor
 @NoArgsConstructor(access = PROTECTED)
 @Table(
-        name = "five_minutes_candle",
+        name = "fifteen_minutes_candle",
         indexes = {
-                @Index(name = "fmc_market_candle_date_time_utc_idx", columnList = "market,candle_date_time_utc"),
-                @Index(name = "fmc_market_candle_date_time_kst_desc_timestamp_idx", columnList = "market,candle_date_time_kst desc,timestamp"),
-                @Index(name = "fmc_market_candle_date_time_kst_idx", columnList = "market,candle_date_time_kst"),
-                @Index(name = "fmc_market_timestamp_idx", columnList = "market,timestamp")
+                @Index(name = "fimc_market_candle_date_time_utc_idx", columnList = "market,candle_date_time_utc"),
+                @Index(name = "fimc_market_candle_date_time_kst_desc_timestamp_idx", columnList = "market,candle_date_time_kst desc,timestamp"),
+                @Index(name = "fimc_market_candle_date_time_kst_idx", columnList = "market,candle_date_time_kst"),
+                @Index(name = "fimc_market_timestamp_idx", columnList = "market,timestamp")
         }
 )
 @Entity
-public class FiveMinutesCandle implements Candle {
+public class FifteenMinutesCandle implements Candle {
 
     @Id
     @GeneratedValue(strategy = IDENTITY)
@@ -63,8 +63,8 @@ public class FiveMinutesCandle implements Candle {
     @Column(name = "candle_acc_trade_volume")
     private Double candleAccTradeVolume;                    // 누적 거래량
 
-    public static FiveMinutesCandle of(MinuteCandle candle) {
-        return new FiveMinutesCandle(null,
+    public static FifteenMinutesCandle of(MinuteCandle candle) {
+        return new FifteenMinutesCandle(null,
                 MarketType.find(candle.getMarket()),
                 candle.getCandleDateTimeUtc(),
                 candle.getCandleDateTimeKst(),

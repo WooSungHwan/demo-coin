@@ -1,5 +1,6 @@
 package com.example.democoin.backtest.entity;
 
+import com.example.democoin.configuration.enums.Reason;
 import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.enums.OrdSideType;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,9 @@ public class BackTestOrders {
     @Column(name = "side")
     private OrdSideType side;
 
+    @Column(name = "reason")
+    private String reason;
+
     @Column(name = "price")
     private Double price; // 1코인 당 거래가격
 
@@ -56,12 +60,12 @@ public class BackTestOrders {
     @Column(name = "max_proceed_rate")
     private Double maxProceedRate;
 
-    public static BackTestOrders of(MarketType market, OrdSideType side, Double price, Double volume, Double fee, long timestamp, Double proceeds, Double proceedRate, Double maxProceedRate) {
-        return new BackTestOrders(null, market, side, price, volume, fee, LocalDateTime.now(), timestamp, proceeds, proceedRate, maxProceedRate);
+    public static BackTestOrders of(MarketType market, OrdSideType side, Reason reason, Double price, Double volume, Double fee, long timestamp, Double proceeds, Double proceedRate, Double maxProceedRate) {
+        return new BackTestOrders(null, market, side, reason.getType(), price, volume, fee, LocalDateTime.now(), timestamp, proceeds, proceedRate, maxProceedRate);
     }
 
-    public static BackTestOrders of(MarketType market, OrdSideType side, Double price, Double volume, Double fee, long timestamp) {
-        return new BackTestOrders(null, market, side, price, volume, fee, LocalDateTime.now(), timestamp, null, null, null);
+    public static BackTestOrders of(MarketType market, OrdSideType side, Reason reason, Double price, Double volume, Double fee, long timestamp) {
+        return new BackTestOrders(null, market, side, reason.getType(), price, volume, fee, LocalDateTime.now(), timestamp, null, null, null);
     }
 
 }

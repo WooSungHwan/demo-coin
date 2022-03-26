@@ -4,6 +4,8 @@ import com.example.democoin.backtest.entity.ResultInfo;
 import com.example.democoin.backtest.repository.ResultInfoJdbcTemplate;
 import com.example.democoin.backtest.repository.ResultInfoRepository;
 import com.example.democoin.backtest.service.AccountCoinWalletService;
+import com.example.democoin.backtest.strategy.ask.AskReason;
+import com.example.democoin.backtest.strategy.bid.BidReason;
 import com.example.democoin.indicator.result.BollingerBands;
 import com.example.democoin.upbit.service.FiveMinutesCandleService;
 import com.example.democoin.utils.IndicatorUtil;
@@ -28,6 +30,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.example.democoin.backtest.strategy.ask.AskReason.NO_ASK;
+import static com.example.democoin.backtest.strategy.bid.BidReason.NO_BID;
+
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -46,11 +51,11 @@ public class BackTest2 {
 
     public void start() {
         int page = 1;
-        AskStrategy askStrategy = AskStrategy.STRATEGY_4;
-        BidStrategy bidStrategy = BidStrategy.STRATEGY_4;
+        BidStrategy bidStrategy = BidStrategy.STRATEGY_12;
+        AskStrategy askStrategy = AskStrategy.STRATEGY_3;
 
-        LocalDateTime startDate = LocalDateTime.of(2017, 10, 1, 0, 0, 0);
-        LocalDateTime endDate = LocalDateTime.of(2018, 1, 1, 0, 0, 0);
+        LocalDateTime startDate = LocalDateTime.of(2018, 1, 1, 0, 0, 0);
+        LocalDateTime endDate = LocalDateTime.of(2018, 7, 1, 0, 0, 0);
 
         backTestOrdersRepository.deleteAll();
         accountCoinWalletRepository.deleteAll();
@@ -108,20 +113,22 @@ public class BackTest2 {
                 BollingerBands bollingerBands = IndicatorUtil.getBollingerBands(prices);
                 RSIs rsi14 = IndicatorUtil.getRSI14(prices);
 
-                boolean isAsk = isAskable && 매도신호(askStrategy, bollingerBands, rsi14, candles, wallet, targetCandle);
-
-                if (isAsk) { // 매도
-                    log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
-                    orderService.ask(targetCandle, wallet);
-                    log.info("{}% \r\n", targetCandle.getCandlePercent());
+                if (isAskable) {
+                    AskReason askReason = 매도신호(askStrategy, bollingerBands, rsi14, candles, wallet, targetCandle);
+                    if (askReason.isAsk()) { // 매도
+                        log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
+                        orderService.ask(targetCandle, wallet, askReason);
+                        log.info("{}% \r\n", targetCandle.getCandlePercent());
+                    }
                 }
 
-
-                boolean isBid = isBidable && 매수신호(bidStrategy, bollingerBands, rsi14, candles, targetCandle);
-                if (isBid) { // 매수
-                    log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
-                    orderService.bid(targetCandle, wallet);
-                    log.info("{}% \r\n", targetCandle.getCandlePercent());
+                if (isBidable) {
+                    BidReason bidReason = 매수신호(bidStrategy, bollingerBands, rsi14, candles, targetCandle);
+                    if (bidReason.isBid()) {
+                        log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
+                        orderService.bid(targetCandle, wallet, bidReason);
+                        log.info("{}% \r\n", targetCandle.getCandlePercent());
+                    }
                 }
 
                 printWalletInfo(accountCoinWalletService.fetchWallet(market, targetCandle.getTradePrice()));
@@ -149,7 +156,7 @@ public class BackTest2 {
         }
     }
 
-    private boolean 매수신호(BidStrategy bidStrategy, BollingerBands bollingerBands, RSIs rsi14, List<FiveMinutesCandle> candles, FiveMinutesCandle targetCandle) {
+    private BidReason 매수신호(BidStrategy bidStrategy, BollingerBands bollingerBands, RSIs rsi14, List<FiveMinutesCandle> candles, FiveMinutesCandle targetCandle) {
         switch (bidStrategy) {
             case STRATEGY_1: // 볼린저밴드 하단 돌파 / RSI14 35 이하
                 return BackTestBidSignal.strategy_1(rsi14, bollingerBands, candles.get(0));
@@ -171,12 +178,18 @@ public class BackTest2 {
                 return BackTestBidSignal.strategy_9(bollingerBands, candles);
             case STRATEGY_10: // 볼린저밴드 7개봉 수축 / 200 이평 이상 or 볼린저밴드 하단선 상향돌파 / 200 이평선 돌파
                 return BackTestBidSignal.strategy_10(bollingerBands, candles);
+            case STRATEGY_11: // 5분봉 3틱 하락, rsi 50 이하
+                return BackTestBidSignal.strategy_11(rsi14, candles);
+            case STRATEGY_12: // 5분봉 3틱 하락, rsi 40 이하, 볼린저 밴드 하단선 아래
+                return BackTestBidSignal.strategy_12(rsi14, bollingerBands, candles);
+            case STRATEGY_13: // 5분봉 3틱 하락(개선1), rsi 30 이상 50 이하, 볼린저 밴드 하단선 아래
+                return BackTestBidSignal.strategy_13(rsi14, bollingerBands, candles);
             default:
-                return false;
+                return NO_BID;
         }
     }
 
-    private boolean 매도신호(AskStrategy askStrategy, BollingerBands bollingerBands, RSIs rsi14, List<FiveMinutesCandle> candles, AccountCoinWallet wallet, FiveMinutesCandle targetCandle) {
+    private AskReason 매도신호(AskStrategy askStrategy, BollingerBands bollingerBands, RSIs rsi14, List<FiveMinutesCandle> candles, AccountCoinWallet wallet, FiveMinutesCandle targetCandle) {
         switch (askStrategy) {
             case STRATEGY_1:
                 return BackTestAskSignal.strategy_1(wallet, rsi14, bollingerBands, candles.get(0));
@@ -196,8 +209,10 @@ public class BackTest2 {
                 return BackTestAskSignal.strategy_8(wallet, bollingerBands, rsi14, candles.get(0));
             case STRATEGY_9: // 볼린저 밴드 상한선 하향돌파 또는 rsi 70 하향돌
                 return BackTestAskSignal.strategy_9(wallet, bollingerBands, rsi14, candles, candles.get(0));
+            case STRATEGY_10: // rsi 50 이상
+                return BackTestAskSignal.strategy_10(wallet, rsi14, candles.get(0));
             default:
-                return false;
+                return NO_ASK;
         }
     }
 }

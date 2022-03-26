@@ -1,12 +1,9 @@
 package com.example.democoin;
 
 import com.example.democoin.backtest.BackTest2;
-import com.example.democoin.backtest.entity.ResultInfo;
 import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.backtest.repository.ResultInfoJdbcTemplate;
 import com.example.democoin.backtest.repository.ResultInfoRepository;
-import com.example.democoin.backtest.strategy.ask.AskStrategy;
-import com.example.democoin.backtest.strategy.bid.BidStrategy;
 import com.example.democoin.configuration.properties.UpbitProperties;
 import com.example.democoin.slack.SlackMessageService;
 import com.example.democoin.task.service.ScheduleService;
@@ -14,11 +11,14 @@ import com.example.democoin.upbit.client.UpbitAllMarketClient;
 import com.example.democoin.upbit.client.UpbitAssetClient;
 import com.example.democoin.upbit.client.UpbitCandleClient;
 import com.example.democoin.upbit.client.UpbitOrderClient;
+import com.example.democoin.upbit.db.entity.FifteenMinutesCandle;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.db.entity.Orders;
+import com.example.democoin.upbit.db.repository.FifteenMinutesCandleRepository;
 import com.example.democoin.upbit.db.repository.FiveMinutesCandleRepository;
 import com.example.democoin.upbit.db.repository.OrdersRepository;
 import com.example.democoin.upbit.enums.MarketType;
+import com.example.democoin.upbit.enums.MinuteType;
 import com.example.democoin.upbit.enums.OrdSideType;
 import com.example.democoin.upbit.enums.OrderStateType;
 import com.example.democoin.upbit.request.MarketOrderableRequest;
@@ -33,7 +33,7 @@ import com.example.democoin.upbit.result.orders.OrderCancelResult;
 import com.example.democoin.upbit.result.orders.OrderResult;
 import com.example.democoin.upbit.result.orders.SingleOrderResult;
 import com.example.democoin.utils.JsonUtil;
-import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +52,7 @@ import static com.example.democoin.upbit.enums.MarketUnit.KRW;
 import static com.example.democoin.upbit.enums.OrdSideType.ASK;
 import static com.example.democoin.upbit.enums.OrdSideType.BID;
 
+@Slf4j
 @SpringBootTest
 class DemoCoinApplicationTests {
 
@@ -75,6 +76,9 @@ class DemoCoinApplicationTests {
 
     @Autowired
     private FiveMinutesCandleRepository fiveMinutesCandleRepository;
+
+    @Autowired
+    private FifteenMinutesCandleRepository fifteenMinutesCandleRepository;
 
     @Autowired
     private OrdersRepository ordersRepository;
@@ -113,8 +117,34 @@ class DemoCoinApplicationTests {
 //        주문예제();
 //        List<OrderResult> orderList = 주문목록조회();
 //        주문취소(orderList.get(0).getUuid());
-//        오늘_가장최근수집된일자_수집(MarketType.KRW_BTC);
-//        오늘_최초캔들생성일자_수집(MarketType.KRW_XRP);
+        log.info("======= 최근일자 수집 시작 =====");
+        for (MarketType marketType : MarketType.marketTypeList) {
+            log.info("======= {} 시작 =====",marketType.getName());
+            오늘_가장최근수집된일자_수집(MinuteType.FIVE, marketType);
+            log.info("======= {} 종료 =====", marketType.getName());
+        };
+        for (MarketType marketType : MarketType.marketTypeList) {
+            log.info("======= {} 시작 =====",marketType.getName());
+            오늘_가장최근수집된일자_수집(MinuteType.FIFTEEN, marketType);
+            log.info("======= {} 종료 =====", marketType.getName());
+        };
+        log.info("======= 최근일자 수집 종료 =====");
+/*
+        log.info("======= 최초일자 수집 시작 =====");
+        for (MarketType marketType : MarketType.marketTypeList) {
+            log.info("======= {} 시작 =====",marketType.getName());
+            오늘_최초캔들생성일자_수집(MinuteType.FIVE, marketType);
+            log.info("======= {} 종료 =====", marketType.getName());
+        }
+
+        for (MarketType marketType : MarketType.marketTypeList) {
+            log.info("======= {} 시작 =====",marketType.getName());
+            오늘_최초캔들생성일자_수집(MinuteType.FIFTEEN, marketType);
+            log.info("======= {} 종료 =====", marketType.getName());
+        }
+
+        log.info("======= 최초일자 수집 종료 =====");*/
+
 /*
         double[] bitcoins = {4600000}; //fiveMinutesCandleRepository.findFiveMinutesCandlesByLimit(500);
         RSI rsi = new RSI(14);
@@ -127,8 +157,12 @@ class DemoCoinApplicationTests {
 //        BollingerBands bollingerBands = Indicator.getBollingerBands(prices);
 
 //        System.out.println();
-//        backTesting();
-        backTesting2();
+//        backTesting2();
+
+//        List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(KRW_BTC.getType(), 1647146998423L);
+
+//        double cci = IndicatorUtil.getCCI(candles, 20);
+//        System.out.println();
 
 //        List<MinuteCandle> minuteCandles = upbitCandleClient.getMinuteCandles(5, KRW_BTC, 26, LocalDateTime.now().minusMinutes(5));
 
@@ -146,19 +180,28 @@ class DemoCoinApplicationTests {
         backTest2.start();
     }
 
-    private void 오늘_가장최근수집된일자_수집(MarketType market) throws Exception {
-        scheduleService.collectGetCoinFiveMinutesCandles(market);
+    private void 오늘_가장최근수집된일자_수집(MinuteType minute, MarketType market) throws Exception {
+        scheduleService.collectGetCoinCandles(minute, market);
     }
 
-    private void 오늘_최초캔들생성일자_수집(MarketType market) throws IOException, InterruptedException {
+    private void 오늘_최초캔들생성일자_수집(MinuteType minuteType, MarketType market) throws IOException, InterruptedException {
         int size = 0;
-        LocalDateTime nextTo = LocalDateTime.now().minusMinutes(5);;
+        LocalDateTime nextTo = LocalDateTime.now().minusMinutes(minuteType.getMinute());
         while (true) {
             long start = System.currentTimeMillis();
-            List<MinuteCandle> minuteCandles = 분봉(5, market, 200, nextTo);
+            List<MinuteCandle> minuteCandles = 분봉(minuteType.getMinute(), market, 200, nextTo);
             size += minuteCandles.size();
             nextTo = minuteCandles.get(minuteCandles.size() - 1).getCandleDateTimeUtc();
-            fiveMinutesCandleRepository.saveAll(minuteCandles.stream().map(FiveMinutesCandle::of).collect(Collectors.toUnmodifiableList()));
+            switch (minuteType) {
+                case FIVE:
+                    fiveMinutesCandleRepository.saveAll(minuteCandles.stream().map(FiveMinutesCandle::of).collect(Collectors.toUnmodifiableList()));
+                    break;
+                case FIFTEEN:
+                    fifteenMinutesCandleRepository.saveAll(minuteCandles.stream().map(FifteenMinutesCandle::of).collect(Collectors.toUnmodifiableList()));
+                    break;
+                default:
+                    throw new RuntimeException("There isn`t type : " + minuteType.name());
+            }
             long end = System.currentTimeMillis();
             System.out.printf("========== %s초 =========== 사이즈 : %s\r\n", (end - start) / 1000.0, size);
             Thread.sleep(100);

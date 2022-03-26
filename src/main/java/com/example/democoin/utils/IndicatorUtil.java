@@ -3,6 +3,7 @@ package com.example.democoin.utils;
 import com.example.democoin.indicator.raw.RSI;
 import com.example.democoin.indicator.result.BollingerBands;
 import com.example.democoin.indicator.result.RSIs;
+import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import java.math.BigDecimal;
@@ -59,6 +60,14 @@ public class IndicatorUtil {
         return prices20;
     }
 
+    /**
+     * <pre>
+     *     n일 동안의 표준편차 리스트
+     * </pre>
+     * @param day
+     * @param values
+     * @return
+     */
     public static List<Double> stdevList(int day, List<Double> values) {
         List<Double> stdevList = new ArrayList<>();
         for (int i = 0; i < values.size(); i++) {
@@ -97,6 +106,48 @@ public class IndicatorUtil {
         return RSIs.of(Arrays.stream(rsi.count(rawDoubles))
                 .boxed()
                 .collect(Collectors.toUnmodifiableList()));
+    }
+
+    public static double getCCI(List<FiveMinutesCandle> candles, int day) {
+        /*
+        M = ( H + L + C ) / 3
+        H : 고가, L : 저가, C : 종가, M : 평균가격(mean price)
+
+        SM = M의 n일 합계 / n
+        단, N은 일반적으로 20일을 기본값으로 제공함.
+
+        D = ( M – SM )의 N일 합계 / N
+        M : 평균가격, SM : n기간 단순 이동평균, D : 평균편차(mean deviation)
+
+        CCI = ( M – SM ) / (0.015 * D )
+         */
+        double nowM = getMeanPrice(candles.get(0));
+        double nowSM = getSimpleMean(candles.subList(0, day));
+        List<Double> dList = new ArrayList<>();
+        for (int i = 0; i < day; i++) {
+            double m = getMeanPrice(candles.get(i));
+            int fromIndex = i;
+            int toIndex = i + day;
+            double sm = getSimpleMean(candles.subList(fromIndex, toIndex));
+            dList.add(Math.abs(m - sm));
+        }
+        double nowD = getSMAList(20, dList).get(0).doubleValue();
+        return (nowM - nowSM) / (0.015 * nowD);
+    }
+
+    private static double getSimpleMean(List<FiveMinutesCandle> candles) {
+        return candles.stream()
+                .mapToDouble(IndicatorUtil::getMeanPrice)
+                .average()
+                .getAsDouble();
+    }
+
+    private static double getMeanPrice(double highPrice, double lowPrice, double tradePrice) {
+        return (highPrice + lowPrice + tradePrice) / 3;
+    }
+
+    private static double getMeanPrice(FiveMinutesCandle candle) {
+        return getMeanPrice(candle.getHighPrice(), candle.getLowPrice(), candle.getTradePrice()) / 3;
     }
 
     public static double fee(double price) {

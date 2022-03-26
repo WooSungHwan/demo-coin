@@ -4,6 +4,7 @@ import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.backtest.entity.BackTestOrders;
 import com.example.democoin.backtest.repository.BackTestOrdersRepository;
+import com.example.democoin.configuration.enums.Reason;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.utils.NumberUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,14 +28,14 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
 
     @Transactional
     @Override
-    public BackTestOrders bid(FiveMinutesCandle targetCandle, AccountCoinWallet wallet) { // 매수
+    public BackTestOrders bid(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason) { // 매수
         double openingPrice = targetCandle.getOpeningPrice();
         double fee = fee(wallet.getBalance());
         double bidAmount = wallet.getBalance();
         double volume = bidAmount / openingPrice; // 매수량
 
         // 다음 캔들 시가에 매수
-        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(targetCandle.getMarket(), BID, openingPrice, volume, fee, targetCandle.getTimestamp()));
+        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(targetCandle.getMarket(), BID, reason, openingPrice, volume, fee, targetCandle.getTimestamp()));
 
         wallet.allBid(openingPrice, bidAmount, volume, fee);
         accountCoinWalletRepository.save(wallet);
@@ -46,7 +47,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
 
     @Transactional
     @Override
-    public BackTestOrders ask(FiveMinutesCandle targetCandle, AccountCoinWallet wallet) { // 매도
+    public BackTestOrders ask(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason) { // 매도
         if (wallet.isEmpty()) {
             log.info("---------- 가진 것도 없는데 뭘 매도해 ----------");
             return null;
@@ -70,6 +71,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
         BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(
                 wallet.getMarket(),
                 ASK,
+                reason,
                 targetCandle.getOpeningPrice(),
                 volume, fee, targetCandle.getTimestamp(),
                 proceeds,
