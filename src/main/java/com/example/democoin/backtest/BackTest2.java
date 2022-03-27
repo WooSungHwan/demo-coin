@@ -4,10 +4,12 @@ import com.example.democoin.backtest.entity.ResultInfo;
 import com.example.democoin.backtest.repository.ResultInfoJdbcTemplate;
 import com.example.democoin.backtest.repository.ResultInfoRepository;
 import com.example.democoin.backtest.service.AccountCoinWalletService;
+import com.example.democoin.backtest.strategy.BidSignalParams;
 import com.example.democoin.backtest.strategy.ask.AskReason;
 import com.example.democoin.backtest.strategy.bid.BidReason;
 import com.example.democoin.indicator.result.BollingerBands;
-import com.example.democoin.upbit.service.FiveMinutesCandleService;
+import com.example.democoin.upbit.db.entity.FifteenMinutesCandle;
+import com.example.democoin.upbit.service.CandleService;
 import com.example.democoin.utils.IndicatorUtil;
 import com.example.democoin.indicator.result.RSIs;
 import com.example.democoin.backtest.entity.AccountCoinWallet;
@@ -38,7 +40,7 @@ import static com.example.democoin.backtest.strategy.bid.BidReason.NO_BID;
 @Component
 public class BackTest2 {
 
-    private final FiveMinutesCandleService fiveMinutesCandleService;
+    private final CandleService candleService;
     private final AccountCoinWalletService accountCoinWalletService;
     private final BackTestOrderService orderService;
 
@@ -51,8 +53,8 @@ public class BackTest2 {
 
     public void start() {
         int page = 1;
-        BidStrategy bidStrategy = BidStrategy.STRATEGY_12;
-        AskStrategy askStrategy = AskStrategy.STRATEGY_3;
+        BidStrategy bidStrategy = BidStrategy.STRATEGY_14;
+        AskStrategy askStrategy = AskStrategy.STRATEGY_10;
 
         LocalDateTime startDate = LocalDateTime.of(2018, 1, 1, 0, 0, 0);
         LocalDateTime endDate = LocalDateTime.of(2018, 7, 1, 0, 0, 0);
@@ -70,7 +72,7 @@ public class BackTest2 {
             int offset = (page - 1) * limit;
 
             for (MarketType market : MarketType.marketTypeList) {
-                List<FiveMinutesCandle> fiveMinutesCandles = fiveMinutesCandleService.findFiveMinutesCandlesLimitOffset(
+                List<FiveMinutesCandle> fiveMinutesCandles = candleService.findFiveMinutesCandlesLimitOffset(
                         market.getType(),
                         startDate,
                         limit,
@@ -86,14 +88,14 @@ public class BackTest2 {
                     continue;
                 }
 
-                List<FiveMinutesCandle> candles = fiveMinutesCandleService.findFiveMinutesCandlesUnderByTimestamp(market.getType(), baseCandle.getTimestamp());
+                List<FiveMinutesCandle> candles = candleService.findFiveMinutesCandlesUnderByTimestamp(market.getType(), baseCandle.getTimestamp());
                 if (candles.size() < 200) {
                     log.info("해당 시간대는 캔들 200개 미만이므로 테스트할 수 없습니다. -- {}", baseCandle.getCandleDateTimeKst());
                     continue;
                 }
 
                 // targetCandle의 봉에서 매수, 매도
-                FiveMinutesCandle targetCandle = fiveMinutesCandleService.nextCandle(baseCandle.getTimestamp(), baseCandle.getMarket().getType());
+                FiveMinutesCandle targetCandle = candleService.nextCandle(baseCandle.getTimestamp(), baseCandle.getMarket().getType());
 
                 if (Objects.isNull(targetCandle)) {
                     log.info("{} 해당 캔들에서 종료됨", baseCandle.getCandleDateTimeKst());
@@ -123,7 +125,11 @@ public class BackTest2 {
                 }
 
                 if (isBidable) {
-                    BidReason bidReason = 매수신호(bidStrategy, bollingerBands, rsi14, candles, targetCandle);
+                    List<FifteenMinutesCandle> fifCandles = candleService.findFifteenMinutesCandlesUnderByTimestamp(market.getType(), baseCandle.getTimestamp());
+                    RSIs fifRsi14 =  IndicatorUtil.getRSI14(fifCandles.stream().map(FifteenMinutesCandle::getTradePrice).collect(Collectors.toUnmodifiableList()));
+                    BidSignalParams params = getBidSignalParams(bidStrategy, candles, targetCandle, bollingerBands, rsi14, fifRsi14);
+
+                    BidReason bidReason = 매수신호(params);
                     if (bidReason.isBid()) {
                         log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
                         orderService.bid(targetCandle, wallet, bidReason);
@@ -150,14 +156,35 @@ public class BackTest2 {
         }
     }
 
+    private BidSignalParams getBidSignalParams(BidStrategy bidStrategy,
+                                               List<FiveMinutesCandle> candles,
+                                               FiveMinutesCandle targetCandle,
+                                               BollingerBands bollingerBands,
+                                               RSIs rsi14,
+                                               RSIs fifRsi14) {
+        return BidSignalParams.builder()
+                .bidStrategy(bidStrategy)
+                .bollingerBands(bollingerBands)
+                .rsi14(rsi14)
+                .candles(candles)
+                .targetCandle(targetCandle)
+                .fifRsi14(fifRsi14)
+                .build();
+    }
+
     private void printWalletInfo(AccountCoinWallet fetchWallet) {
         if (!fetchWallet.isEmpty()) {
             log.info(fetchWallet.getWalletInfo());
         }
     }
 
-    private BidReason 매수신호(BidStrategy bidStrategy, BollingerBands bollingerBands, RSIs rsi14, List<FiveMinutesCandle> candles, FiveMinutesCandle targetCandle) {
-        switch (bidStrategy) {
+    private BidReason 매수신호(BidSignalParams params) {
+        BollingerBands bollingerBands = params.getBollingerBands();
+        RSIs rsi14 = params.getRsi14();
+        List<FiveMinutesCandle> candles = params.getCandles();
+        RSIs fifRsi14 = params.getFifRsi14();
+
+        switch (params.getBidStrategy()) {
             case STRATEGY_1: // 볼린저밴드 하단 돌파 / RSI14 35 이하
                 return BackTestBidSignal.strategy_1(rsi14, bollingerBands, candles.get(0));
             case STRATEGY_2:
@@ -184,6 +211,8 @@ public class BackTest2 {
                 return BackTestBidSignal.strategy_12(rsi14, bollingerBands, candles);
             case STRATEGY_13: // 5분봉 3틱 하락(개선1), rsi 30 이상 50 이하, 볼린저 밴드 하단선 아래
                 return BackTestBidSignal.strategy_13(rsi14, bollingerBands, candles);
+            case STRATEGY_14: // 5분봉 3틱 하락(개선2), 볼린저 밴드 하단선 아래, 15분봉 rsi 40 이하
+                return BackTestBidSignal.strategy_14(bollingerBands, candles, fifRsi14);
             default:
                 return NO_BID;
         }

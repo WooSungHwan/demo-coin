@@ -3,11 +3,9 @@ package com.example.democoin.backtest.service;
 import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.backtest.entity.BackTestOrders;
-import com.example.democoin.backtest.strategy.ask.AskReason;
-import com.example.democoin.backtest.strategy.bid.BidReason;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.enums.MarketType;
-import com.example.democoin.upbit.service.FiveMinutesCandleService;
+import com.example.democoin.upbit.service.CandleService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +31,7 @@ public class TestBackTestService {
     private BackTestOrderService backTestOrderService;
 
     @Autowired
-    private FiveMinutesCandleService fiveMinutesCandleService;
+    private CandleService fiveMinutesCandleService;
 
     @Autowired
     AccountCoinWalletRepository accountCoinWalletRepository;

@@ -4,6 +4,7 @@ import com.example.democoin.indicator.result.BollingerBands;
 import com.example.democoin.utils.IndicatorUtil;
 import com.example.democoin.indicator.result.RSIs;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
+import com.example.democoin.utils.NumberUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
@@ -196,26 +197,67 @@ public class BackTestBidSignal {
      */
     public static BidReason strategy_13(RSIs rsi14, BollingerBands bollingerBands, List<FiveMinutesCandle> candles) {
         boolean fiveThreeTick = candles.stream().limit(3).allMatch(FiveMinutesCandle::isNegative);
-
+        if (!fiveThreeTick) {
+            return NO_BID;
+        }
         int tick = 0;
-        for (int i = 1; i < 3; i++) {
-            FiveMinutesCandle before = candles.get(i - 1);
+        for (int i = 0; i < 3; i++) {
             FiveMinutesCandle now = candles.get(i);
-            if (now.isPositive()) {
-                return NO_BID;
-            }
+            FiveMinutesCandle before = candles.get(i + 1);
             if (before.getLowPrice() > now.getMedian()) {
                 tick++;
             }
         }
 
-        if (fiveThreeTick &&
-            tick == 3 &&
+        if (tick == 3 &&
             rsi14.isUnder(50) &&
             rsi14.isOver(30) &&
             bollingerBands.isBollingerBandLddTouch(candles.get(0))) {
 
             return THREE_NEGATIVE_CANDLE_APPEAR_AND_RSI_UNDER_AND_BB_LDD_TOUCH;
+        }
+
+        return NO_BID;
+    }
+
+    // 5분봉 3틱 하락(개선2), 볼린저 밴드 하단선 아래, 15분봉 rsi 40 이하
+    public static BidReason strategy_14(BollingerBands bollingerBands,
+                                        List<FiveMinutesCandle> candles,
+                                        RSIs fifRsi14) {
+        int tick = 0;
+        for (int i = 0; i < candles.size(); i++) {
+            FiveMinutesCandle now = candles.get(i);
+            FiveMinutesCandle before = candles.get(i + 1);
+
+            if (now.isPositive()) {
+                if (before.isPositive()) {
+                    return NO_BID;
+                } else {
+                    if (now.isBetween(before)) {
+                        continue;
+                    }
+                    return NO_BID;
+                }
+            } else {
+                if (before.isPositive()) {
+                    if (before.getTradePrice() > now.getTradePrice()) {
+                        continue;
+                    } else {
+                        return NO_BID;
+                    }
+                } else {
+                    tick++;
+                }
+            }
+            if (tick >= 3) {
+                break;
+            }
+        }
+
+        if (fifRsi14.isUnder(40) &&
+            bollingerBands.isBollingerBandLddTouch(candles.get(0)) &&
+            tick >= 3) {
+            return FIVE_THREE_TICK_BB_LDD_TOUCH_FIF_RSI_UNDER;
         }
 
         return NO_BID;
@@ -237,5 +279,5 @@ public class BackTestBidSignal {
         }
         return NO_BID;
     }
-
 }
+

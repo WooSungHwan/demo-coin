@@ -2,6 +2,7 @@ package com.example.democoin.upbit.db.entity;
 
 import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.result.candles.MinuteCandle;
+import com.example.democoin.utils.NumberUtils;
 import lombok.*;
 
 import javax.persistence.*;

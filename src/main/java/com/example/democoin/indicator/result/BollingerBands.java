@@ -17,7 +17,7 @@ public class BollingerBands {
     private List<BigDecimal> ldd; // 하단
 
     /**
-     * 볼린저 밴드 하단선 터치
+     * 볼린저 밴드 상단선 터치
      * @param candle
      * @return
      */
@@ -31,7 +31,7 @@ public class BollingerBands {
     }
 
     /**
-     * 볼린저 밴드 상단선 터치 상태
+     * 볼린저 밴드 하단선 터치 상태
      * @param candle
      * @return
      */

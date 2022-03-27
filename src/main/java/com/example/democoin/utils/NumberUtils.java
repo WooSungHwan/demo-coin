@@ -20,4 +20,14 @@ public class NumberUtils {
         }
     }
 
+    public static boolean between(Double area1, Double area2, Double value) {
+        if (area1 == area2 && area2 == value) {
+            return true;
+        } else if (area1 > area2) {
+            return area1 >= value && value >= area2;
+        } else {
+            return area2 >= value && value >= area1;
+        }
+    }
+
 }

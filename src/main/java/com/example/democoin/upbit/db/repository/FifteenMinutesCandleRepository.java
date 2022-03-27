@@ -20,7 +20,7 @@ public interface FifteenMinutesCandleRepository extends JpaRepository<FifteenMin
      * @return
      */
     @Query(nativeQuery = true, value = "SELECT * FROM fifteen_minutes_candle WHERE market = :market AND candle_date_time_kst >= :kst ORDER BY candle_date_time_kst LIMIT :limit OFFSET :offset")
-    List<FifteenMinutesCandle> findFiveMinutesCandlesLimitOffset(@Param("market") String market,
+    List<FifteenMinutesCandle> findFifteenMinutesCandlesLimitOffset(@Param("market") String market,
                                                                  @Param("kst") LocalDateTime kst,
                                                                  @Param("limit") int limit,
                                                                  @Param("offset") int offset);
@@ -32,7 +32,7 @@ public interface FifteenMinutesCandleRepository extends JpaRepository<FifteenMin
      */
     @Query(nativeQuery = true, value = "SELECT * FROM fifteen_minutes_candle WHERE market = :market AND timestamp <= :timestamp ORDER BY timestamp DESC LIMIT 200")
     List<FifteenMinutesCandle> findFifteenMinutesCandlesUnderByTimestamp(@Param("market") String market,
-                                                                      @Param("timestamp") long timestamp);
+                                                                         @Param("timestamp") long timestamp);
 
     /**
      * 해당 timestamp값의 다음 캔들을 가져온다.

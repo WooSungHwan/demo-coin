@@ -2,7 +2,7 @@ package com.example.democoin.backtest.service;
 
 import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
-import com.example.democoin.upbit.service.FiveMinutesCandleService;
+import com.example.democoin.upbit.service.CandleService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ class TestAccountCoinWalletService {
     private AccountCoinWalletService accountCoinWalletService;
 
     @Autowired
-    private FiveMinutesCandleService fiveMinutesCandleService;
+    private CandleService fiveMinutesCandleService;
 
     @BeforeEach
     void setUp() {

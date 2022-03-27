@@ -17,8 +17,8 @@ public enum BidStrategy {
     STRATEGY_10("볼린저밴드 7개봉 수축 / 200 이평 이상 or 볼린저밴드 하단선 상향돌파 / 200 이평선 돌파"),
     STRATEGY_11("5분봉 3틱 하락, rsi 35 이하"),
     STRATEGY_12("5분봉 3틱 하락, rsi 40 이하, 볼린저 밴드 하단선 아래"),
-    STRATEGY_13("5분봉 3틱 하락(개선1), rsi 30 이상 50 이하, 볼린저 밴드 하단선 아래")
-    ;
+    STRATEGY_13("5분봉 3틱 하락(개선1), rsi 30 이상 50 이하, 볼린저 밴드 하단선 아래"),
+    STRATEGY_14("5분봉 3틱 하락(개선2), 볼린저 밴드 하단선 아래, 15분봉 rsi 40 이하");
 
     private String strategy;
 }

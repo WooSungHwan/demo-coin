@@ -117,6 +117,8 @@ class DemoCoinApplicationTests {
 //        주문예제();
 //        List<OrderResult> orderList = 주문목록조회();
 //        주문취소(orderList.get(0).getUuid());
+
+/*
         log.info("======= 최근일자 수집 시작 =====");
         for (MarketType marketType : MarketType.marketTypeList) {
             log.info("======= {} 시작 =====",marketType.getName());
@@ -129,6 +131,7 @@ class DemoCoinApplicationTests {
             log.info("======= {} 종료 =====", marketType.getName());
         };
         log.info("======= 최근일자 수집 종료 =====");
+*/
 /*
         log.info("======= 최초일자 수집 시작 =====");
         for (MarketType marketType : MarketType.marketTypeList) {
@@ -157,7 +160,7 @@ class DemoCoinApplicationTests {
 //        BollingerBands bollingerBands = Indicator.getBollingerBands(prices);
 
 //        System.out.println();
-//        backTesting2();
+        backTesting2();
 
 //        List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(KRW_BTC.getType(), 1647146998423L);
 
