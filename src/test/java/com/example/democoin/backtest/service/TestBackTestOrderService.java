@@ -1,8 +1,8 @@
 package com.example.democoin.backtest.service;
 
 import com.example.democoin.backtest.entity.AccountCoinWallet;
-import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.backtest.entity.BackTestOrders;
+import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.backtest.repository.BackTestOrdersRepository;
 import com.example.democoin.backtest.strategy.ask.AskReason;
 import com.example.democoin.backtest.strategy.bid.BidReason;
@@ -23,7 +23,7 @@ import static com.example.democoin.backtest.service.fixture.BackTestOrdersFixtur
 import static com.example.democoin.backtest.service.fixture.BackTestOrdersFixture.bidBackTestOrders;
 import static com.example.democoin.backtest.service.fixture.FiveMinutesCandleFixture.standardFiveMinutesCandle;
 import static com.example.democoin.utils.IndicatorUtil.fee;
-import static java.math.RoundingMode.HALF_UP;
+import static java.math.RoundingMode.HALF_EVEN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -73,10 +73,10 @@ class TestBackTestOrderService {
         FiveMinutesCandle targetCandle = standardFiveMinutesCandle();
 
         double volume = wallet.getVolume();
-        double valAmount = BigDecimal.valueOf(targetCandle.getTradePrice() * volume).setScale(2, HALF_UP).doubleValue();
+        double valAmount = BigDecimal.valueOf(targetCandle.getTradePrice() * volume).setScale(2, HALF_EVEN).doubleValue();
         double fee = fee(valAmount);
-        double proceeds = BigDecimal.valueOf(valAmount - wallet.getAllPrice()).setScale(2, HALF_UP).doubleValue();
-        double proceedRate = BigDecimal.valueOf(proceeds / wallet.getAllPrice() * 100).setScale(2, HALF_UP).doubleValue();
+        double proceeds = BigDecimal.valueOf(valAmount - wallet.getAllPrice()).setScale(2, HALF_EVEN).doubleValue();
+        double proceedRate = BigDecimal.valueOf(proceeds / wallet.getAllPrice() * 100).setScale(2, HALF_EVEN).doubleValue();
         double maxProceedRate = NumberUtils.max(wallet.getMaxProceedRate(), proceedRate);
 
         BackTestOrders backTestOrders = askBackTestOrders(targetCandle, fee, volume, proceeds, proceedRate, maxProceedRate);

@@ -15,7 +15,8 @@ public enum AskStrategy {
     STRATEGY_7("5일 이동평균선 10일 이동평균선 데드크로스"),
     STRATEGY_8("볼린저밴드 하단선 확장 감소 추세 또는 rsi 70 이상"),
     STRATEGY_9("볼린저 밴드 상한선 하향돌파 또는 rsi 70 하향돌파"),
-    STRATEGY_10("rsi 50 이상")
+    STRATEGY_10("rsi 50 이상"),
+    STRATEGY_11("단순 5분봉 3틱 수익 손절매(-5% 손절, -2% 추매 / 베어 마켓시 익절)")
     ;
 
     private String strategy;

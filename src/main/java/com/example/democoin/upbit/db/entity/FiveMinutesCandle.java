@@ -2,15 +2,13 @@ package com.example.democoin.upbit.db.entity;
 
 import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.result.candles.MinuteCandle;
-import com.example.democoin.utils.NumberUtils;
 import lombok.*;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
-import static java.math.RoundingMode.HALF_UP;
+import static java.math.RoundingMode.HALF_EVEN;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -81,7 +79,7 @@ public class FiveMinutesCandle implements Candle {
     // 캔들의 상승률
     public double getCandlePercent() {
         return BigDecimal.valueOf((this.tradePrice / this.openingPrice * 100) - 100)
-                .setScale(2, HALF_UP)
+                .setScale(2, HALF_EVEN)
                 .doubleValue();
     }
 

@@ -1,5 +1,6 @@
 package com.example.democoin.backtest.service;
 
+import com.example.democoin.backtest.WalletList;
 import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.backtest.entity.BackTestOrders;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static com.example.democoin.DemoCoinApplication.df;
 import static com.example.democoin.utils.IndicatorUtil.fee;
@@ -30,8 +33,9 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
     @Override
     public BackTestOrders bid(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason) { // 매수
         double openingPrice = targetCandle.getOpeningPrice();
-        double fee = fee(wallet.getBalance());
-        double bidAmount = wallet.getBalance();
+        Double bidBalance = wallet.getBalance();
+        double fee = fee(bidBalance);
+        double bidAmount = bidBalance;
         double volume = bidAmount / openingPrice; // 매수량
 
         // 다음 캔들 시가에 매수
@@ -49,15 +53,11 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
     @Override
     public BackTestOrders ask(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason) { // 매도
         if (wallet.isEmpty()) {
-            log.info("---------- 가진 것도 없는데 뭘 매도해 ----------");
             return null;
         }
         double volume = wallet.getVolume();
-//        double valAmount = BigDecimal.valueOf(targetCandle.getTradePrice() * volume).setScale(2, HALF_UP).doubleValue();
         double valAmount = targetCandle.getTradePrice() * volume;
         double fee = fee(valAmount);
-//        double proceeds = BigDecimal.valueOf(valAmount - wallet.getAllPrice()).setScale(2, HALF_UP).doubleValue();
-//        double proceedRate = BigDecimal.valueOf(proceeds / wallet.getAllPrice() * 100).setScale(2, HALF_UP).doubleValue();
         double proceeds = valAmount - wallet.getAllPrice();
         double proceedRate = proceeds / wallet.getAllPrice() * 100;
         double maxProceedRate = NumberUtils.max(wallet.getMaxProceedRate(), proceedRate);
@@ -82,6 +82,45 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
         wallet.allAsk(valAmount, fee);
         accountCoinWalletRepository.save(wallet);
 
+        return order;
+    }
+
+    @Transactional
+    @Override
+    public BackTestOrders ask(FiveMinutesCandle targetCandle, WalletList walletList, Reason reason) {
+        if (walletList.isEmpty()) {
+            return null;
+        }
+        double volume = walletList.getVolume();
+        double valAmount = targetCandle.getTradePrice() * volume;
+        double fee = fee(valAmount);
+        Double allPrice = walletList.getAllPrice();
+        double proceeds = valAmount - allPrice;
+        double proceedRate = proceeds / allPrice * 100;
+        double maxProceedRate = walletList.getProceedRate(); // 구할 수 없다.
+
+        log.info("{} 매도 발생 !! ---- 수익률 {}% 매도가 : {} / 매도 볼륨 {}, "
+                , walletList.getMarket()
+                , proceedRate
+                , targetCandle.getTradePrice()
+                , volume);
+
+        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(
+                walletList.getMarket(),
+                ASK,
+                reason,
+                targetCandle.getOpeningPrice(),
+                volume, fee, targetCandle.getTimestamp(),
+                proceeds,
+                proceedRate,
+                maxProceedRate));
+
+        // 매도 -> 다음 캔들 시가에 매도
+        List<AccountCoinWallet> bidWallets = walletList.getBidWallets();
+        bidWallets.forEach(wallet -> {
+            wallet.allAsk(valAmount, fee);
+        });
+        accountCoinWalletRepository.saveAll(bidWallets);
         return order;
     }
 }

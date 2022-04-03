@@ -6,6 +6,7 @@ import com.example.democoin.indicator.result.RSIs;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.utils.NumberUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -190,6 +191,7 @@ public class BackTestBidSignal {
 
     /**
      * 5분봉 3틱 하락(개선1), rsi 30 이상 50 이하, 볼린저 밴드 하단선 아래
+     *
      * @param rsi14
      * @param bollingerBands
      * @param candles
@@ -200,6 +202,20 @@ public class BackTestBidSignal {
         if (!fiveThreeTick) {
             return NO_BID;
         }
+        int tick = countTickProcess1(candles);
+
+        if (tick == 3 &&
+                rsi14.isUnder(50) &&
+                rsi14.isOver(30) &&
+                bollingerBands.isBollingerBandLddTouch(candles.get(0))) {
+
+            return THREE_NEGATIVE_CANDLE_APPEAR_AND_RSI_UNDER_AND_BB_LDD_TOUCH;
+        }
+
+        return NO_BID;
+    }
+
+    private static int countTickProcess1(List<FiveMinutesCandle> candles) {
         int tick = 0;
         for (int i = 0; i < 3; i++) {
             FiveMinutesCandle now = candles.get(i);
@@ -208,22 +224,29 @@ public class BackTestBidSignal {
                 tick++;
             }
         }
-
-        if (tick == 3 &&
-            rsi14.isUnder(50) &&
-            rsi14.isOver(30) &&
-            bollingerBands.isBollingerBandLddTouch(candles.get(0))) {
-
-            return THREE_NEGATIVE_CANDLE_APPEAR_AND_RSI_UNDER_AND_BB_LDD_TOUCH;
-        }
-
-        return NO_BID;
+        return tick;
     }
 
     // 5분봉 3틱 하락(개선2), 볼린저 밴드 하단선 아래, 15분봉 rsi 40 이하
     public static BidReason strategy_14(BollingerBands bollingerBands,
                                         List<FiveMinutesCandle> candles,
                                         RSIs fifRsi14) {
+        Integer tick = countTickProcess2(candles);
+        if (tick == null) {
+            return NO_BID;
+        }
+
+        if (fifRsi14.isUnder(40) &&
+                bollingerBands.isBollingerBandLddTouch(candles.get(0)) &&
+                tick >= 3) {
+            return FIVE_THREE_TICK_BB_LDD_TOUCH_FIF_RSI_UNDER;
+        }
+
+        return NO_BID;
+    }
+
+    @Nullable
+    private static Integer countTickProcess2(List<FiveMinutesCandle> candles) {
         int tick = 0;
         for (int i = 0; i < candles.size(); i++) {
             FiveMinutesCandle now = candles.get(i);
@@ -231,19 +254,19 @@ public class BackTestBidSignal {
 
             if (now.isPositive()) {
                 if (before.isPositive()) {
-                    return NO_BID;
+                    return null;
                 } else {
                     if (now.isBetween(before)) {
                         continue;
                     }
-                    return NO_BID;
+                    return null;
                 }
             } else {
                 if (before.isPositive()) {
                     if (before.getTradePrice() > now.getTradePrice()) {
                         continue;
                     } else {
-                        return NO_BID;
+                        return null;
                     }
                 } else {
                     tick++;
@@ -253,11 +276,31 @@ public class BackTestBidSignal {
                 break;
             }
         }
+        return tick;
+    }
 
-        if (fifRsi14.isUnder(40) &&
-            bollingerBands.isBollingerBandLddTouch(candles.get(0)) &&
-            tick >= 3) {
-            return FIVE_THREE_TICK_BB_LDD_TOUCH_FIF_RSI_UNDER;
+    public static BidReason strategy_15(List<FiveMinutesCandle> candles) {
+        boolean fiveThreeTick = candles.stream().limit(3).allMatch(FiveMinutesCandle::isNegative);
+        if (!fiveThreeTick) {
+            return NO_BID;
+        }
+        int tick = countTickProcess1(candles);
+
+        if (tick == 3) {
+            return THREE_NEGATIVE_CANDLE_APPEAR_REPAIR_1;
+        }
+
+        return NO_BID;
+    }
+
+    public static BidReason strategy_16(List<FiveMinutesCandle> candles) {
+        Integer tick = countTickProcess2(candles);
+        if (tick == null) {
+            return NO_BID;
+        }
+
+        if (tick >= 3) {
+            return THREE_NEGATIVE_CANDLE_APPEAR_REPAIR_2;
         }
 
         return NO_BID;

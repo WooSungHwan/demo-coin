@@ -1,5 +1,6 @@
 package com.example.democoin.backtest.service;
 
+import com.example.democoin.backtest.WalletList;
 import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.upbit.enums.MarketType;
@@ -8,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
+import java.util.List;
 
 @Transactional(readOnly = true)
 @Slf4j
@@ -19,16 +20,16 @@ public class AccountCoinWalletServiceImpl implements AccountCoinWalletService {
     private final AccountCoinWalletRepository accountCoinWalletRepository;
 
     @Override
-    public boolean isAskable(AccountCoinWallet wallet) {
-        if (Objects.nonNull(wallet.getVolume())) {
+    public boolean isAskable(WalletList walletResult) {
+        if (walletResult.isNotEmpty()) {
             return true;
         }
         return false;
     }
 
     @Override
-    public boolean isBidable(AccountCoinWallet wallet) {
-        if (wallet.isEmpty()) {
+    public boolean isBidable(WalletList walletResult) {
+        if (walletResult.hasSlot()) {
             return true;
         }
         return false;
@@ -36,17 +37,18 @@ public class AccountCoinWalletServiceImpl implements AccountCoinWalletService {
 
     @Transactional
     @Override
-    public AccountCoinWallet fetchWallet(MarketType market, Double tradePrice) {
-        AccountCoinWallet wallet = accountCoinWalletRepository.findByMarket(market);
-        if (!wallet.isEmpty()) {
-            wallet.fetch(tradePrice);
-            return accountCoinWalletRepository.save(wallet);
-        }
-        return wallet;
+    public List<AccountCoinWallet> fetchWallet(MarketType market, Double tradePrice) {
+        List<AccountCoinWallet> wallets = accountCoinWalletRepository.findByMarket(market);
+        wallets.forEach(wallet -> {
+            if (!wallet.isEmpty()) {
+                wallet.fetch(tradePrice);
+            }
+        });
+        return accountCoinWalletRepository.saveAll(wallets);
     }
 
     @Override
-    public AccountCoinWallet getWalletByMarket(MarketType market) {
+    public List<AccountCoinWallet> getWalletByMarket(MarketType market) {
         return accountCoinWalletRepository.findByMarket(market);
     }
 }

@@ -41,4 +41,9 @@ public class CandleServiceImpl implements CandleService {
     public FiveMinutesCandle nextCandle(Long timestamp, String market) {
         return fiveMinutesCandleRepository.nextCandle(timestamp, market);
     }
+
+    @Override
+    public Double getFiveMinuteCandlesMA(FiveMinutesCandle candle, int limit) {
+        return fiveMinutesCandleRepository.getMA(candle.getMarket().getType(), candle.getCandleDateTimeKst(), limit);
+    }
 }

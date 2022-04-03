@@ -35,7 +35,7 @@ public class TestBackTestService {
 
     @Autowired
     AccountCoinWalletRepository accountCoinWalletRepository;
-
+/*
     @Test
     void backTestService() {
         int balance = 1000000;
@@ -104,6 +104,6 @@ public class TestBackTestService {
         accountCoinWalletService.fetchWallet(marketType, candles.get(5).getTradePrice());
 
         // 일곱째 캔들 매도
-    }
+    }*/
 
 }

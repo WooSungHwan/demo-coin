@@ -1,14 +1,18 @@
 package com.example.democoin.backtest.entity;
 
 import com.example.democoin.upbit.enums.MarketType;
-import lombok.*;
 import com.example.democoin.utils.NumberUtils;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Objects;
 
 import static com.example.democoin.DemoCoinApplication.df;
-import static java.math.RoundingMode.HALF_UP;
+import static java.math.RoundingMode.HALF_EVEN;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -75,14 +79,12 @@ public class AccountCoinWallet {
         this.valAmount = null;
         this.proceedRate = null;
         this.maxProceedRate = null;
-//        this.balance = new BigDecimal(this.balance).setScale(2, HALF_UP).doubleValue();
     }
 
     public void allBid(double tradePrice, double bidAmount, double volume, double fee) {
         this.avgPrice = tradePrice;
         this.volume = volume;
         this.allPrice = bidAmount - fee;
-//        this.valAmount = new BigDecimal(bidAmount).setScale(2, HALF_UP).doubleValue();
         this.valAmount = bidAmount - fee;
         this.balance = 0d;
 
@@ -96,7 +98,6 @@ public class AccountCoinWallet {
 
     public void fetch(double tradePrice) {
         if (!isEmpty()) {
-//            this.valAmount = new BigDecimal(tradePrice * this.volume).setScale(2, HALF_UP).doubleValue();
 
             this.valAmount = tradePrice * this.volume;
             this.proceeds = this.valAmount - this.allPrice;
@@ -109,14 +110,18 @@ public class AccountCoinWallet {
     }
 
     private void setProceeds() {
-        this.proceeds = new BigDecimal(this.valAmount - this.allPrice).setScale(2, HALF_UP).doubleValue();
-        double proceedRate = new BigDecimal(this.proceeds / this.allPrice * 100).setScale(2, HALF_UP).doubleValue();
+        this.proceeds = new BigDecimal(this.valAmount - this.allPrice).setScale(2, HALF_EVEN).doubleValue();
+        double proceedRate = new BigDecimal(this.proceeds / this.allPrice * 100).setScale(2, HALF_EVEN).doubleValue();
         this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
         this.proceedRate = proceedRate;
     }
 
     public boolean isEmpty() {
         return Objects.isNull(volume) || volume == 0;
+    }
+
+    public boolean isNotEmpty() {
+        return !isEmpty();
     }
 
     public boolean isMaxProceedRateFall() {

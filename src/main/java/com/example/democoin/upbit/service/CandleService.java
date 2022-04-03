@@ -20,4 +20,6 @@ public interface CandleService {
 
     FiveMinutesCandle nextCandle(Long timestamp,
                                  String market);
+
+    Double getFiveMinuteCandlesMA(FiveMinutesCandle candle, int limit);
 }

@@ -14,6 +14,7 @@ import java.util.List;
 public enum AskReason implements Reason {
 
     NO_ASK("NO_ASK", "매도안함"),
+    BEAR_MARKET("BEAR_MARKET", "하락장 출현으로 인한 전량매도"),
     MAX_PROCEED_RATE_FALL("MAX_PROCEED_RATE_FALL", "최대 수익률 대비 하락 매도"),
     STOP_LOSS("STOP_LOSS", "손절매"),
     RSI_OVER("RSI_OVER", "RSI 지수 이상"),

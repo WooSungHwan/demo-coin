@@ -1,6 +1,7 @@
 package com.example.democoin.upbit.db.repository;
 
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
+import com.example.democoin.upbit.enums.MarketType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,4 +42,17 @@ public interface FiveMinutesCandleRepository extends JpaRepository<FiveMinutesCa
     @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE market = :market AND timestamp > :timestamp ORDER BY timestamp LIMIT 1")
     FiveMinutesCandle nextCandle(@Param("timestamp") long timestamp,
                                  @Param("market") String market);
+
+
+    /**
+     * 종가 이동평균
+     * @param market
+     * @param candleTime
+     * @param limit
+     * @return
+     */
+    @Query(nativeQuery = true, value = "SELECT AVG(trade_price) FROM (SELECT trade_price FROM five_minutes_candle WHERE market = :market AND candle_date_time_kst <= :candleTime ORDER BY candle_date_time_kst DESC LIMIT :limit) a")
+    Double getMA(@Param("market") String market,
+                 @Param("candleTime") LocalDateTime candleTime,
+                 @Param("limit") int limit);
 }

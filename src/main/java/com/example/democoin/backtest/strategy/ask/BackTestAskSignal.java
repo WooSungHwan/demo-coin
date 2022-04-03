@@ -1,5 +1,6 @@
 package com.example.democoin.backtest.strategy.ask;
 
+import com.example.democoin.backtest.BackTest2;
 import com.example.democoin.indicator.result.BollingerBands;
 import com.example.democoin.utils.IndicatorUtil;
 import com.example.democoin.indicator.result.RSIs;
@@ -158,7 +159,7 @@ public class BackTestAskSignal {
             return MAX_PROCEED_RATE_FALL;
         }
 
-        if (wallet.getProceedRate() < -2) {
+        if (wallet.getProceedRate() < BackTest2.STOP_LOSS) {
             log.info("{} 해당 코인 매도 신호 발생, KST 캔들 시각 : {}, -2% 손절매!! 수익률 : {}",
                     targetCandle.getMarket(), targetCandle.getCandleDateTimeKst(), wallet.getProceedRate());
             return STOP_LOSS;

@@ -57,7 +57,7 @@ public class RSI {
                 if (Double.isNaN(val)) {
                     rsis[i] = 0;
                 } else {
-                    rsis[i] = new BigDecimal(val).setScale(2, RoundingMode.HALF_UP).doubleValue();
+                    rsis[i] = new BigDecimal(val).setScale(2, RoundingMode.HALF_EVEN).doubleValue();
                 }
             }
         }

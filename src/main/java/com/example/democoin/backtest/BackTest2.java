@@ -9,6 +9,7 @@ import com.example.democoin.backtest.strategy.ask.AskReason;
 import com.example.democoin.backtest.strategy.bid.BidReason;
 import com.example.democoin.indicator.result.BollingerBands;
 import com.example.democoin.upbit.db.entity.FifteenMinutesCandle;
+import com.example.democoin.upbit.enums.MarketFlowType;
 import com.example.democoin.upbit.service.CandleService;
 import com.example.democoin.utils.IndicatorUtil;
 import com.example.democoin.indicator.result.RSIs;
@@ -32,9 +33,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.example.democoin.backtest.strategy.ask.AskReason.BEAR_MARKET;
 import static com.example.democoin.backtest.strategy.ask.AskReason.NO_ASK;
 import static com.example.democoin.backtest.strategy.bid.BidReason.NO_BID;
 
+/**
+ * 분할매수 도입 안한 버전
+ */
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -50,20 +55,28 @@ public class BackTest2 {
     private final ResultInfoRepository resultInfoRepository;
 
     double balance = 1000000.0; // 잔고
+    public static final int BID_SLOT = 4;
+    public static final boolean IS_USE_FIFTEEN_CANDLE = false;
+    public static final int STOP_LOSS = -2;
+//    public static final int TRACE_BID = -2;
+
 
     public void start() {
         int page = 1;
-        BidStrategy bidStrategy = BidStrategy.STRATEGY_14;
-        AskStrategy askStrategy = AskStrategy.STRATEGY_10;
+        BidStrategy bidStrategy = BidStrategy.STRATEGY_16;
+        AskStrategy askStrategy = AskStrategy.STRATEGY_3;
 
-        LocalDateTime startDate = LocalDateTime.of(2018, 1, 1, 0, 0, 0);
-        LocalDateTime endDate = LocalDateTime.of(2018, 7, 1, 0, 0, 0);
+        LocalDateTime startDate = LocalDateTime.of(2017, 10, 1, 0, 0, 0);
+        LocalDateTime endDate = LocalDateTime.of(2022, 3, 26, 0, 0, 0);
 
         backTestOrdersRepository.deleteAll();
         accountCoinWalletRepository.deleteAll();
 
         for (MarketType marketType : MarketType.marketTypeList) {
-            accountCoinWalletRepository.save(AccountCoinWallet.of(marketType, balance * marketType.getPercent()));
+            for(int i = 0; i < BID_SLOT; i++) {
+                AccountCoinWallet wallet = AccountCoinWallet.of(marketType, balance * marketType.getPercent() / BID_SLOT);
+                accountCoinWalletRepository.save(wallet);
+            }
         }
 
         boolean over = false;
@@ -97,15 +110,27 @@ public class BackTest2 {
                 // targetCandle의 봉에서 매수, 매도
                 FiveMinutesCandle targetCandle = candleService.nextCandle(baseCandle.getTimestamp(), baseCandle.getMarket().getType());
 
+                List<AccountCoinWallet> wallets = accountCoinWalletRepository.findByMarket(market);
+                WalletList walletList = WalletList.of(wallets);
+
+                Double MA50 = candleService.getFiveMinuteCandlesMA(candles.get(50), 50);
+                Double MA100 = candleService.getFiveMinuteCandlesMA(candles.get(100), 100);
+                Double MA150 = candleService.getFiveMinuteCandlesMA(candles.get(150), 150);
+                switch (judgeMarketFlowType(MA50, MA100, MA150)) {
+                    case BEAR_MARKET: // 베어마켓에서는 거래 안한다.
+//                        orderService.ask(targetCandle, walletList, BEAR_MARKET); // TODO 버그있음. 찾아야함.
+                        wallets.forEach(wallet -> orderService.ask(targetCandle, wallet, BEAR_MARKET));
+                        log.info("====== {} 베어마켓 진행중 전량 매도 / 거래 중지 ======", market.getName());
+                        continue;
+                }
+
                 if (Objects.isNull(targetCandle)) {
                     log.info("{} 해당 캔들에서 종료됨", baseCandle.getCandleDateTimeKst());
                     return;
-
                 }
-                AccountCoinWallet wallet = accountCoinWalletRepository.findByMarket(market);
 
-                boolean isAskable = accountCoinWalletService.isAskable(wallet);
-                boolean isBidable = accountCoinWalletService.isBidable(wallet);
+                boolean isAskable = accountCoinWalletService.isAskable(walletList);
+                boolean isBidable = accountCoinWalletService.isBidable(walletList);
 
                 if (!isAskable && !isBidable) {
                     continue;
@@ -116,43 +141,50 @@ public class BackTest2 {
                 RSIs rsi14 = IndicatorUtil.getRSI14(prices);
 
                 if (isAskable) {
-                    AskReason askReason = 매도신호(askStrategy, bollingerBands, rsi14, candles, wallet, targetCandle);
-                    if (askReason.isAsk()) { // 매도
-                        log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
-                        orderService.ask(targetCandle, wallet, askReason);
-                        log.info("{}% \r\n", targetCandle.getCandlePercent());
-                    }
+                    // 지갑들  매도
+                    askProcess(askStrategy, candles, targetCandle, walletList, bollingerBands, rsi14);
                 }
 
                 if (isBidable) {
-                    List<FifteenMinutesCandle> fifCandles = candleService.findFifteenMinutesCandlesUnderByTimestamp(market.getType(), baseCandle.getTimestamp());
-                    RSIs fifRsi14 =  IndicatorUtil.getRSI14(fifCandles.stream().map(FifteenMinutesCandle::getTradePrice).collect(Collectors.toUnmodifiableList()));
-                    BidSignalParams params = getBidSignalParams(bidStrategy, candles, targetCandle, bollingerBands, rsi14, fifRsi14);
+                    List<FifteenMinutesCandle> fifCandles = null;
+                    RSIs fifRsi14 = null;
+                    if (IS_USE_FIFTEEN_CANDLE) {
+                        fifCandles = candleService.findFifteenMinutesCandlesUnderByTimestamp(market.getType(), baseCandle.getTimestamp());
+                        fifRsi14 = IndicatorUtil.getRSI14(fifCandles.stream().map(FifteenMinutesCandle::getTradePrice).collect(Collectors.toUnmodifiableList()));
+                    }
 
+                    BidSignalParams params = getBidSignalParams(bidStrategy, candles, targetCandle, bollingerBands, rsi14, fifRsi14);
                     BidReason bidReason = 매수신호(params);
                     if (bidReason.isBid()) {
                         log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
-                        orderService.bid(targetCandle, wallet, bidReason);
+                        orderService.bid(targetCandle, walletList.getBidableWallet(), bidReason);
                         log.info("{}% \r\n", targetCandle.getCandlePercent());
                     }
                 }
 
-                printWalletInfo(accountCoinWalletService.fetchWallet(market, targetCandle.getTradePrice()));
-                if (endDate.isBefore(targetCandle.getCandleDateTimeKst())) {
-                    ResultInfo resultInfo = ResultInfo.builder()
-                            .askStrategy(askStrategy)
-                            .bidStrategy(bidStrategy)
-                            .coinResult(resultInfoJdbcTemplate.getResultInfo())
-                            .positivePercent(resultInfoJdbcTemplate.getPositivePercent())
-                            .startDate(startDate)
-                            .endDate(endDate)
-                            .build();
+                List<AccountCoinWallet> fetchWallets = accountCoinWalletService.fetchWallet(market, targetCandle.getTradePrice());
 
-                    resultInfoRepository.save(resultInfo);
+                WalletList result = WalletList.of(fetchWallets);
+                printWalletInfo(result);
+
+                // 기간 종료
+                if (endDate.isBefore(targetCandle.getCandleDateTimeKst())) {
+                    saveResultInfo(bidStrategy, askStrategy, startDate, endDate);
                     return;
                 }
             }
             page++;
+        }
+    }
+
+    private void askProcess(AskStrategy askStrategy, List<FiveMinutesCandle> candles, FiveMinutesCandle targetCandle, WalletList walletList, BollingerBands bollingerBands, RSIs rsi14) {
+        for (AccountCoinWallet wallet : walletList.getAskableWallets()) {
+            AskReason askReason = 매도신호(askStrategy, bollingerBands, rsi14, candles, wallet, targetCandle);
+            if (askReason.isAsk()) { // 매도
+                log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
+                orderService.ask(targetCandle, wallet, askReason);
+                log.info("{}% \r\n", targetCandle.getCandlePercent());
+            }
         }
     }
 
@@ -172,9 +204,9 @@ public class BackTest2 {
                 .build();
     }
 
-    private void printWalletInfo(AccountCoinWallet fetchWallet) {
-        if (!fetchWallet.isEmpty()) {
-            log.info(fetchWallet.getWalletInfo());
+    private void printWalletInfo(WalletList result) {
+        if (result.isNotEmpty()) {
+            log.info(result.getWalletSummaryInfo());
         }
     }
 
@@ -213,6 +245,10 @@ public class BackTest2 {
                 return BackTestBidSignal.strategy_13(rsi14, bollingerBands, candles);
             case STRATEGY_14: // 5분봉 3틱 하락(개선2), 볼린저 밴드 하단선 아래, 15분봉 rsi 40 이하
                 return BackTestBidSignal.strategy_14(bollingerBands, candles, fifRsi14);
+            case STRATEGY_15: // 5분봉 3틱 하락(개선1)
+                return BackTestBidSignal.strategy_15(candles);
+            case STRATEGY_16: // 5분봉 3틱 하락(개선2)
+                return BackTestBidSignal.strategy_16(candles);
             default:
                 return NO_BID;
         }
@@ -240,8 +276,33 @@ public class BackTest2 {
                 return BackTestAskSignal.strategy_9(wallet, bollingerBands, rsi14, candles, candles.get(0));
             case STRATEGY_10: // rsi 50 이상
                 return BackTestAskSignal.strategy_10(wallet, rsi14, candles.get(0));
+//            case STRATEGY_11: //
+//                return BackTestAskSignal.strategy_11();
             default:
                 return NO_ASK;
+        }
+    }
+
+    private void saveResultInfo(BidStrategy bidStrategy, AskStrategy askStrategy, LocalDateTime startDate, LocalDateTime endDate) {
+        ResultInfo resultInfo = ResultInfo.builder()
+                .askStrategy(askStrategy)
+                .bidStrategy(bidStrategy)
+                .coinResult(resultInfoJdbcTemplate.getResultInfo())
+                .positivePercent(resultInfoJdbcTemplate.getPositivePercent())
+                .startDate(startDate)
+                .endDate(endDate)
+                .build();
+
+        resultInfoRepository.save(resultInfo);
+    }
+
+    private static MarketFlowType judgeMarketFlowType(Double point50, Double point100, Double point150) {
+        if (point50 > point100 && point100 > point150) {
+            return MarketFlowType.BULL_MARKET;
+        } else if (point50 < point100 && point100 < point150) {
+            return MarketFlowType.BEAR_MARKET;
+        } else {
+            return MarketFlowType.SIDEWAYS;
         }
     }
 }

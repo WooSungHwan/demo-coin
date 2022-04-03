@@ -1,14 +1,17 @@
 package com.example.democoin.backtest.service;
 
+import com.example.democoin.backtest.WalletList;
 import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.upbit.enums.MarketType;
 
+import java.util.List;
+
 public interface AccountCoinWalletService {
-    boolean isAskable(AccountCoinWallet wallet);
+    boolean isAskable(WalletList walletResult);
 
-    boolean isBidable(AccountCoinWallet wallet);
+    boolean isBidable(WalletList walletResult);
 
-    AccountCoinWallet fetchWallet(MarketType market, Double tradePrice);
+    List<AccountCoinWallet> fetchWallet(MarketType market, Double tradePrice);
 
-    AccountCoinWallet getWalletByMarket(MarketType market);
+    List<AccountCoinWallet> getWalletByMarket(MarketType market);
 }

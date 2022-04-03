@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
-import static java.math.RoundingMode.HALF_UP;
+import static java.math.RoundingMode.HALF_EVEN;
 
 public class IndicatorUtil {
 
@@ -55,7 +55,7 @@ public class IndicatorUtil {
             }
             ArrayList<Double> priceList = new ArrayList<>(prices.subList(fromIndex, toIndex));
             OptionalDouble average = priceList.stream().mapToDouble(Double::doubleValue).average();
-            prices20.add(new BigDecimal(average.getAsDouble()).setScale(4, HALF_UP));
+            prices20.add(new BigDecimal(average.getAsDouble()).setScale(4, HALF_EVEN));
         }
         return prices20;
     }

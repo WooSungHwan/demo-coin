@@ -21,7 +21,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import static java.math.RoundingMode.HALF_UP;
+import static java.math.RoundingMode.HALF_EVEN;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -84,7 +84,7 @@ public class CoinTask {
                 String nowFormat = LocalDateTime.now(ZoneId.of("Asia/Seoul")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 slackMessageService.message(String.format("%s 해당 시간에 거래량 급등 발생!! 종목 : %s", nowFormat, marketResult.getKoreanName()));
             }
-            log.info("============ before: {}, after: {} ============", new BigDecimal(beforeStdev).setScale(2, HALF_UP), new BigDecimal(afterStdev).setScale(2, HALF_UP));
+            log.info("============ before: {}, after: {} ============", new BigDecimal(beforeStdev).setScale(2, HALF_EVEN), new BigDecimal(afterStdev).setScale(2, HALF_EVEN));
             log.info("======================= 종목 : {} 종료 =======================", market);
 
             try {
