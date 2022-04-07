@@ -14,4 +14,6 @@ public interface AccountCoinWalletService {
     List<AccountCoinWallet> fetchWallet(MarketType market, Double tradePrice);
 
     List<AccountCoinWallet> getWalletByMarket(MarketType market);
+
+    void rebalancing(MarketType market);
 }

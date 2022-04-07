@@ -16,6 +16,18 @@ public class BollingerBands {
 
     private List<BigDecimal> ldd; // 하단
 
+    public Double getUddValue() {
+        return this.udd.get(0).doubleValue();
+    }
+
+    public Double getMddValue() {
+        return this.mdd.get(0).doubleValue();
+    }
+
+    public Double getLddValue() {
+        return this.ldd.get(0).doubleValue();
+    }
+
     /**
      * 볼린저 밴드 상단선 터치
      * @param candle

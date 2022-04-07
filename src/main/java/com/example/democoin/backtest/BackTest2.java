@@ -59,7 +59,7 @@ public class BackTest2 {
 //    public static final int TRACE_BID = -2;
 
     public void start() {
-        BidStrategy bidStrategy = BidStrategy.STRATEGY_16;
+        BidStrategy bidStrategy = BidStrategy.STRATEGY_3;
         AskStrategy askStrategy = AskStrategy.STRATEGY_3;
 
         LocalDateTime startDate = LocalDateTime.of(2021, 11, 14, 0, 0, 0);
@@ -101,9 +101,13 @@ public class BackTest2 {
                 Double MA50 = candleService.getFiveMinuteCandlesMA(candles.get(50), 50);
                 Double MA100 = candleService.getFiveMinuteCandlesMA(candles.get(100), 100);
                 Double MA150 = candleService.getFiveMinuteCandlesMA(candles.get(150), 150);
+
+                List<Double> prices = candles.stream().map(FiveMinutesCandle::getTradePrice).toList();
+                RSIs rsi14 = IndicatorUtil.getRSI14(prices);
+
                 if (judgeMarketFlowType(MA50, MA100, MA150) == MarketFlowType.BEAR_MARKET) { // 베어마켓에서는 거래 안한다.
 //                        orderService.ask(targetCandle, walletList, BEAR_MARKET); // TODO 버그있음. 찾아야함.
-                    wallets.forEach(wallet -> orderService.ask(targetCandle, wallet, BEAR_MARKET));
+                    wallets.forEach(wallet -> orderService.ask(targetCandle, wallet, BEAR_MARKET, rsi14));
                     log.info("====== {} 베어마켓 진행중 전량 매도 / 거래 중지 ======", market.getName());
                     continue;
                 }
@@ -120,9 +124,7 @@ public class BackTest2 {
                     continue;
                 }
 
-                List<Double> prices = candles.stream().map(FiveMinutesCandle::getTradePrice).toList();
                 BollingerBands bollingerBands = IndicatorUtil.getBollingerBands(prices);
-                RSIs rsi14 = IndicatorUtil.getRSI14(prices);
 
                 if (isAskable) {
                     // 지갑들  매도
@@ -134,7 +136,7 @@ public class BackTest2 {
                     BidReason bidReason = bidSignal(params);
                     if (bidReason.isBid()) {
                         log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
-                        orderService.bid(targetCandle, walletList.getBidableWallet(), bidReason);
+                        orderService.bid(targetCandle, walletList.getBidableWallet(), bidReason, rsi14);
                         log.info("{}% \r\n", targetCandle.getCandlePercent());
                     }
                 }
@@ -164,10 +166,13 @@ public class BackTest2 {
             AskReason askReason = askSignal(askStrategy, bollingerBands, rsi14, candles, wallet);
             if (askReason.isAsk()) { // 매도
                 log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
-                orderService.ask(targetCandle, wallet, askReason);
+                orderService.ask(targetCandle, wallet, askReason, rsi14);
                 log.info("{}% \r\n", targetCandle.getCandlePercent());
             }
         }
+
+        // 리밸런싱
+        accountCoinWalletService.rebalancing(walletList.getMarket());
     }
 
     private BidSignalParams getBidSignalParams(BidStrategy bidStrategy,
@@ -226,6 +231,8 @@ public class BackTest2 {
                     BackTestBidSignal.strategy_15(candles);
             case STRATEGY_16 -> // 5분봉 3틱 하락(개선2)
                     BackTestBidSignal.strategy_16(candles);
+            case STRATEGY_17 -> // 5분봉 3틱 하락(개선3)
+                    BackTestBidSignal.strategy_17(candles);
             default -> NO_BID;
         };
     }

@@ -20,7 +20,9 @@ public enum BidStrategy {
     STRATEGY_13("5분봉 3틱 하락(개선1), rsi 30 이상 50 이하, 볼린저 밴드 하단선 아래"),
     STRATEGY_14("5분봉 3틱 하락(개선2), 볼린저 밴드 하단선 아래, 15분봉 rsi 40 이하"),
     STRATEGY_15("5분봉 3틱 하락(개선1)"),
-    STRATEGY_16("5분봉 3틱 하락(개선2)");
+    STRATEGY_16("5분봉 3틱 하락(개선2)"),
+    STRATEGY_17("5분봉 3틱 하락(개선3)")
+    ;
 
     private String strategy;
 }

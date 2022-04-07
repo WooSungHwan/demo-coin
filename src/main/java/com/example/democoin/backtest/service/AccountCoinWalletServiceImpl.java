@@ -8,8 +8,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
 @Slf4j
@@ -50,5 +52,21 @@ public class AccountCoinWalletServiceImpl implements AccountCoinWalletService {
     @Override
     public List<AccountCoinWallet> getWalletByMarket(MarketType market) {
         return accountCoinWalletRepository.findByMarket(market);
+    }
+
+    @Transactional
+    @Override
+    public void rebalancing(MarketType market) {
+        List<AccountCoinWallet> wallets = accountCoinWalletRepository.findByMarket(market);
+        List<AccountCoinWallet> rebalancingWallets = wallets.stream()
+                .filter(AccountCoinWallet::isEmpty)
+                .toList();
+
+        if (CollectionUtils.isEmpty(rebalancingWallets) || rebalancingWallets.size() == 1) {
+            return;
+        }
+
+        double balance = rebalancingWallets.stream().mapToDouble(AccountCoinWallet::getBalance).sum() / wallets.size();
+        rebalancingWallets.forEach(wallet -> wallet.rebalance(balance));
     }
 }

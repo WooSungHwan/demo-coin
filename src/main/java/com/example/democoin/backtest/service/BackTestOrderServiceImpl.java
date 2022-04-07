@@ -5,7 +5,9 @@ import com.example.democoin.backtest.entity.AccountCoinWallet;
 import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
 import com.example.democoin.backtest.entity.BackTestOrders;
 import com.example.democoin.backtest.repository.BackTestOrdersRepository;
+import com.example.democoin.backtest.strategy.BidSignalParams;
 import com.example.democoin.configuration.enums.Reason;
+import com.example.democoin.indicator.result.RSIs;
 import com.example.democoin.slack.SlackMessageService;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.utils.NumberUtils;
@@ -33,7 +35,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
 
     @Transactional
     @Override
-    public BackTestOrders bid(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason) { // 매수
+    public BackTestOrders bid(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason, RSIs rsIs) { // 매수
         long start = System.currentTimeMillis();
         double openingPrice = targetCandle.getOpeningPrice();
         Double bidBalance = wallet.getBalance();
@@ -42,7 +44,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
         double volume = bidAmount / openingPrice; // 매수량
 
         // 다음 캔들 시가에 매수
-        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(targetCandle.getMarket(), BID, reason, openingPrice, volume, fee, targetCandle.getTimestamp()));
+        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.bidOf(targetCandle.getMarket(), BID, reason, openingPrice, volume, fee, targetCandle.getTimestamp(), rsIs));
 
         wallet.allBid(openingPrice, bidAmount, volume, fee);
         accountCoinWalletRepository.save(wallet);
@@ -58,7 +60,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
 
     @Transactional
     @Override
-    public BackTestOrders ask(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason) { // 매도
+    public BackTestOrders ask(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason, RSIs rsIs) { // 매도
         long start = System.currentTimeMillis();
         if (wallet.isEmpty()) {
             return null;
@@ -76,7 +78,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
                 , targetCandle.getTradePrice()
                 , volume);
 
-        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(
+        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.askOf(
                 wallet.getMarket(),
                 ASK,
                 reason,
@@ -84,7 +86,8 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
                 volume, fee, targetCandle.getTimestamp(),
                 proceeds,
                 proceedRate,
-                maxProceedRate));
+                maxProceedRate,
+                rsIs));
 
         // 매도 -> 다음 캔들 시가에 매도
         wallet.allAsk(valAmount, fee);
@@ -99,7 +102,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
 
     @Transactional
     @Override
-    public BackTestOrders ask(FiveMinutesCandle targetCandle, WalletList walletList, Reason reason) {
+    public BackTestOrders ask(FiveMinutesCandle targetCandle, WalletList walletList, Reason reason, RSIs rsIs) {
         long start = System.currentTimeMillis();
         if (walletList.isEmpty()) {
             return null;
@@ -118,7 +121,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
                 , targetCandle.getTradePrice()
                 , volume);
 
-        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.of(
+        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.askOf(
                 walletList.getMarket(),
                 ASK,
                 reason,
@@ -126,7 +129,8 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
                 volume, fee, targetCandle.getTimestamp(),
                 proceeds,
                 proceedRate,
-                maxProceedRate));
+                maxProceedRate,
+                rsIs));
 
         // 매도 -> 다음 캔들 시가에 매도
         List<AccountCoinWallet> bidWallets = walletList.getBidWallets();

@@ -105,7 +105,7 @@ public class IndicatorUtil {
 
         return RSIs.of(Arrays.stream(rsi.count(rawDoubles))
                 .boxed()
-                .collect(Collectors.toUnmodifiableList()));
+                .toList());
     }
 
     public static double getCCI(List<FiveMinutesCandle> candles, int day) {

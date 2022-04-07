@@ -106,7 +106,7 @@ public class BackTestAskSignal {
      * @return
      */
     public static AskReason strategy_7(List<FiveMinutesCandle> candles, FiveMinutesCandle targetCandle) {
-        List<Double> prices = candles.stream().limit(11).map(FiveMinutesCandle::getTradePrice).collect(Collectors.toList());
+        List<Double> prices = candles.stream().limit(11).map(FiveMinutesCandle::getTradePrice).toList();
         BigDecimal before_price_5 = IndicatorUtil.getSMAList(5, prices.subList(0, 5)).get(0);
         BigDecimal after_price_5 = IndicatorUtil.getSMAList(5, prices.subList(1, 6)).get(0);
 

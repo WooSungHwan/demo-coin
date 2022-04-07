@@ -80,7 +80,7 @@ public class BackTestBidSignal {
      * @return
      */
     public static BidReason strategy_6(BollingerBands bollingerBands, List<FiveMinutesCandle> candles, FiveMinutesCandle targetCandle) {
-        List<Double> prices = candles.stream().limit(11).map(FiveMinutesCandle::getTradePrice).collect(Collectors.toList());
+        List<Double> prices = candles.stream().limit(11).map(FiveMinutesCandle::getTradePrice).toList();
         BigDecimal before_price_5 = IndicatorUtil.getSMAList(5, prices.subList(0, 5)).get(0);
         BigDecimal after_price_5 = IndicatorUtil.getSMAList(5, prices.subList(1, 6)).get(0);
 
@@ -126,7 +126,7 @@ public class BackTestBidSignal {
                                        RSIs rsi14,
                                        List<FiveMinutesCandle> candles,
                                        FiveMinutesCandle targetCandle) {
-        List<BigDecimal> sma200 = IndicatorUtil.getSMAList(199, candles.stream().map(FiveMinutesCandle::getTradePrice).collect(Collectors.toList()));
+        List<BigDecimal> sma200 = IndicatorUtil.getSMAList(199, candles.stream().map(FiveMinutesCandle::getTradePrice).toList());
 
         BidReason bidReason = bbAndsma200Overing(sma200, candles, bollingerBands);
         if (bidReason.isBid()) return bidReason;
@@ -143,7 +143,7 @@ public class BackTestBidSignal {
 
     public static BidReason strategy_9(BollingerBands bollingerBands,
                                        List<FiveMinutesCandle> candles) {
-        List<BigDecimal> sma200 = IndicatorUtil.getSMAList(199, candles.stream().map(FiveMinutesCandle::getTradePrice).collect(Collectors.toList()));
+        List<BigDecimal> sma200 = IndicatorUtil.getSMAList(199, candles.stream().map(FiveMinutesCandle::getTradePrice).toList());
         BidReason bidReason = bbAndsma200Overing(sma200, candles, bollingerBands);
         if (bidReason.isBid()) return bidReason;
 
@@ -153,7 +153,7 @@ public class BackTestBidSignal {
 
     // 볼린저밴드 7개봉 수축 / 200 이평 이상 or 볼린저밴드 하단선 상향돌파 / 200 이평선 돌파
     public static BidReason strategy_10(BollingerBands bollingerBands, List<FiveMinutesCandle> candles) {
-        List<BigDecimal> sma200 = IndicatorUtil.getSMAList(199, candles.stream().map(FiveMinutesCandle::getTradePrice).collect(Collectors.toList()));
+        List<BigDecimal> sma200 = IndicatorUtil.getSMAList(199, candles.stream().map(FiveMinutesCandle::getTradePrice).toList());
 
         // 볼린저밴드 하단선 상향돌파 / 200 이평선 돌파
         BidReason bidReason = bbAndsma200Overing(sma200, candles, bollingerBands);
@@ -245,7 +245,6 @@ public class BackTestBidSignal {
         return NO_BID;
     }
 
-    @Nullable
     private static Integer countTickProcess2(List<FiveMinutesCandle> candles) {
         int tick = 0;
         for (int i = 0; i < candles.size(); i++) {
@@ -254,19 +253,19 @@ public class BackTestBidSignal {
 
             if (now.isPositive()) {
                 if (before.isPositive()) {
-                    return null;
+                    return 0;
                 } else {
                     if (now.isBetween(before)) {
                         continue;
                     }
-                    return null;
+                    return 0;
                 }
             } else {
                 if (before.isPositive()) {
                     if (before.getTradePrice() > now.getTradePrice()) {
                         continue;
                     } else {
-                        return null;
+                        return 0;
                     }
                 } else {
                     tick++;
@@ -295,15 +294,26 @@ public class BackTestBidSignal {
 
     public static BidReason strategy_16(List<FiveMinutesCandle> candles) {
         Integer tick = countTickProcess2(candles);
-        if (tick == null) {
-            return NO_BID;
-        }
 
         if (tick >= 3) {
             return THREE_NEGATIVE_CANDLE_APPEAR_REPAIR_2;
         }
 
         return NO_BID;
+    }
+
+    public static BidReason strategy_17(List<FiveMinutesCandle> candles) {
+        Integer tick = countTickProcess3(candles);
+
+        if (tick >= 3) {
+            return THREE_NEGATIVE_CANDLE_APPEAR_REPAIR_2;
+        }
+
+        return NO_BID;
+    }
+
+    private static Integer countTickProcess3(List<FiveMinutesCandle> candles) {
+        return null;
     }
 
     private static BidReason bbAndsma200Overing(List<BigDecimal> sma200, List<FiveMinutesCandle> candles, BollingerBands bollingerBands) {

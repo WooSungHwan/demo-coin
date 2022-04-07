@@ -43,7 +43,7 @@ public class UpbitAllMarketClient {
                 }
                 return marketResults.stream()
                                     .filter(market -> market.getMarket().contains(marketUnit))
-                                    .collect(Collectors.toUnmodifiableList());
+                                    .toList();
             } catch (Exception e) {
                 throw e;
             }

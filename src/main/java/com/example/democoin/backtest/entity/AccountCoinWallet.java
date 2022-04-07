@@ -109,13 +109,6 @@ public class AccountCoinWallet {
         }
     }
 
-    private void setProceeds() {
-        this.proceeds = new BigDecimal(this.valAmount - this.allPrice).setScale(2, HALF_EVEN).doubleValue();
-        double proceedRate = new BigDecimal(this.proceeds / this.allPrice * 100).setScale(2, HALF_EVEN).doubleValue();
-        this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
-        this.proceedRate = proceedRate;
-    }
-
     public boolean isEmpty() {
         return Objects.isNull(volume) || volume == 0;
     }
@@ -144,6 +137,17 @@ public class AccountCoinWallet {
                 , this.getProceedRate() // 수익률
                 , df.format(this.getProceeds())
                 , df.format(this.getValAmount())); // 잔고
+    }
+
+    public void rebalance(Double balance) {
+        this.balance = balance;
+    }
+
+    private void setProceeds() {
+        this.proceeds = new BigDecimal(this.valAmount - this.allPrice).setScale(2, HALF_EVEN).doubleValue();
+        double proceedRate = new BigDecimal(this.proceeds / this.allPrice * 100).setScale(2, HALF_EVEN).doubleValue();
+        this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
+        this.proceedRate = proceedRate;
     }
 
     @Override

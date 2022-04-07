@@ -157,7 +157,7 @@ public class WalletList {
     public List<AccountCoinWallet> getBidWallets() {
         return wallets.stream()
                 .filter(AccountCoinWallet::isNotEmpty)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
