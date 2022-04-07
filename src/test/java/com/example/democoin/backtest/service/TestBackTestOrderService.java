@@ -42,7 +42,7 @@ class TestBackTestOrderService {
 
     @BeforeEach
     void setUp() {
-        backTestOrderService = new BackTestOrderServiceImpl(backTestOrdersRepository, accountCoinWalletRepository);
+        backTestOrderService = new BackTestOrderServiceImpl(backTestOrdersRepository, accountCoinWalletRepository, null);
     }
 
     @Test

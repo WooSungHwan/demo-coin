@@ -54,3 +54,7 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+test {
+    exclude 'com/example/democoin/backtest/**'
+}

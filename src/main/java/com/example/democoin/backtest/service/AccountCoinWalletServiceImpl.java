@@ -44,7 +44,7 @@ public class AccountCoinWalletServiceImpl implements AccountCoinWalletService {
                 wallet.fetch(tradePrice);
             }
         });
-        return accountCoinWalletRepository.saveAll(wallets);
+        return wallets;
     }
 
     @Override

@@ -1,9 +1,7 @@
 package com.example.democoin.task.service;
 
 import com.example.democoin.upbit.client.UpbitCandleClient;
-import com.example.democoin.upbit.db.entity.FifteenMinutesCandle;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
-import com.example.democoin.upbit.db.repository.FifteenMinutesCandleRepository;
 import com.example.democoin.upbit.db.repository.FiveMinutesCandleRepository;
 import com.example.democoin.upbit.enums.MarketType;
 import com.example.democoin.upbit.enums.MinuteType;
@@ -21,9 +19,6 @@ import java.util.List;
 public class ScheduleServiceImpl implements ScheduleService {
 
     private final FiveMinutesCandleRepository fiveMinutesCandleRepository;
-
-    private final FifteenMinutesCandleRepository fifteenMinutesCandleRepository;
-
     private final UpbitCandleClient upbitCandleClient;
 
     @Override
@@ -39,24 +34,15 @@ public class ScheduleServiceImpl implements ScheduleService {
 
             for (MinuteCandle candle : minuteCandles) {
                 switch (minuteType) {
-                    case FIVE:
-                        if (!fiveMinutesCandleRepository.existsByTimestamp(candle.getTimestamp())) {
+                    case FIVE -> {
+                        if (!fiveMinutesCandleRepository.existsByTimestampAndMarket(market.getType(), candle.getTimestamp())) {
                             fiveMinutesCandleRepository.save(FiveMinutesCandle.of(candle));
                             size ++;
                         } else {
                             flag = false;
                         }
-                        break;
-                    case FIFTEEN:
-                        if (!fifteenMinutesCandleRepository.existsByTimestamp(candle.getTimestamp())) {
-                            fifteenMinutesCandleRepository.save(FifteenMinutesCandle.of(candle));
-                            size++;
-                        } else {
-                            flag = false;
-                        }
-                        break;
-                    default:
-                        throw new RuntimeException("There isn`t type : " + minuteType.name());
+                    }
+                    default -> throw new RuntimeException("There is not a operate minute candle type : " + minuteType.name());
                 }
             }
             nextTo = minuteCandles.get(minuteCandles.size() - 1).getCandleDateTimeUtc();

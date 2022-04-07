@@ -23,12 +23,20 @@ public class SlackMessageService {
 
     private final SlackProperties properties;
 
-    public boolean message(String message) {
+    public boolean scheduleErrorMessage(String message) {
+        return message(message, properties.getChannelScheduleError());
+    }
+
+    public boolean backtestMessage(String message) {
+        return message(message, properties.getChannelBacktest());
+    }
+
+    private boolean message(String message, String channel) {
         RestTemplate restTemplate = new RestTemplate();
 
         Map<String ,Object> body = new HashMap<>();
         String token = properties.getToken();
-        body.put("channel", properties.getChannel());
+        body.put("channel", channel);
         body.put("text", message);
 
         HttpHeaders headers = new HttpHeaders();

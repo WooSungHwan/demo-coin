@@ -11,7 +11,9 @@ import java.util.List;
 
 public interface FiveMinutesCandleRepository extends JpaRepository<FiveMinutesCandle, Long> {
 
-    boolean existsByTimestamp(@Param("timestamp") Long timestamp);
+    @Query(nativeQuery = true, value = "select if(exists(select 1 from five_minutes_candle where market = :market and timestamp = :timestamp), 'true', 'false') as result ")
+    boolean existsByTimestampAndMarket(@Param("market") String market,
+                                       @Param("timestamp") Long timestamp);
 
     /**
      * 캔들 시간순서대로 진행하기 위해 사용.
@@ -24,6 +26,16 @@ public interface FiveMinutesCandleRepository extends JpaRepository<FiveMinutesCa
                                                               @Param("kst") LocalDateTime kst,
                                                               @Param("limit") int limit,
                                                               @Param("offset") int offset);
+
+    /**
+     * 캔들 시간순서대로 진행하기 위해 사용.
+     * @param market
+     * @param kst
+     * @return
+     */
+    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE market = :market AND candle_date_time_kst = :kst")
+    FiveMinutesCandle findFiveMinutesCandleByKst(@Param("market") String market,
+                                                 @Param("kst") LocalDateTime kst);
 
     /**
      * 해당 시점을 포함하여 이전 캔들 200개 가져온다.

@@ -2,6 +2,8 @@ package com.example.democoin.backtest.entity;
 
 import com.example.democoin.backtest.strategy.ask.AskStrategy;
 import com.example.democoin.backtest.strategy.bid.BidStrategy;
+import com.example.democoin.utils.JsonUtil;
+import com.example.democoin.utils.LocalDateTimeUtil;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,4 +43,13 @@ public class ResultInfo {
 
     private LocalDateTime endDate;
 
+    @Override
+    public String toString() {
+        return String.format("[%s - %s] 익절률 : %s, 코인별 수익정보 : %s"
+            , LocalDateTimeUtil.format(startDate)
+            , LocalDateTimeUtil.format(endDate)
+            , positivePercent
+            , coinResult
+        );
+    }
 }

@@ -24,4 +24,9 @@ public class SlackProperties {
     @NotBlank(message = "슬랙 메시지 수신 채널 코드를 설정해주세요.")
     private String channel;
 
+    @NotBlank(message = "슬랙 메시지 수신 백테스트 채널 코드를 설정해주세요.")
+    private String channelBacktest;
+
+    @NotBlank(message = "슬랙 메시지 수신 스케줄 오류 채널 코드를 설정해주세요.")
+    private String channelScheduleError;
 }

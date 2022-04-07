@@ -47,7 +47,7 @@ public class CoinTask {
                     scheduleService.collectGetCoinCandles(MinuteType.FIVE, marketType);
                 } catch (Exception e) {
                     log.error("코인 : {} 5분봉 수집 중 에러가 발생\r\n 에러메시지 : {}", marketType.getName(), e.getMessage());
-                    slackMessageService.message(String.format("%s 5분봉 수집 중 에러발생!! 에러메시지 : %s", marketType.getName(), e.getMessage()));
+                    slackMessageService.scheduleErrorMessage(String.format("%s 5분봉 수집 중 에러발생!! 에러메시지 : %s", marketType.getName(), e.getMessage()));
                 } finally {
                     log.info("코인 : {} 5분봉 수집 종료", marketType.getName());
                 }
@@ -56,7 +56,7 @@ public class CoinTask {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            slackMessageService.message("5분봉 수집 완료");
+            slackMessageService.scheduleErrorMessage("5분봉 수집 완료");
         }
     }
 
@@ -82,7 +82,7 @@ public class CoinTask {
 
             if ((2.0 * beforeStdev) < afterStdev) {
                 String nowFormat = LocalDateTime.now(ZoneId.of("Asia/Seoul")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                slackMessageService.message(String.format("%s 해당 시간에 거래량 급등 발생!! 종목 : %s", nowFormat, marketResult.getKoreanName()));
+                slackMessageService.scheduleErrorMessage(String.format("%s 해당 시간에 거래량 급등 발생!! 종목 : %s", nowFormat, marketResult.getKoreanName()));
             }
             log.info("============ before: {}, after: {} ============", new BigDecimal(beforeStdev).setScale(2, HALF_EVEN), new BigDecimal(afterStdev).setScale(2, HALF_EVEN));
             log.info("======================= 종목 : {} 종료 =======================", market);

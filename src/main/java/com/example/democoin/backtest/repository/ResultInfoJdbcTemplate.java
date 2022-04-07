@@ -18,7 +18,7 @@ public class ResultInfoJdbcTemplate {
     }
 
     public Double getPositivePercent() {
-        String query = "select (select count(*) from back_test_orders where side = 'ask' and proceed_rate > 0) / (select count(*) from back_test_orders where side = 'ask') * 100";
+        String query = "with PROCEEDS as (select sum(proceeds) as proceeds from back_test_orders where reason = 'BEAR_MARKET' and side = 'ask' group by timestamp union all select sum(proceeds) from back_test_orders where reason != 'BEAR_MARKET' and side = 'ask')select ((select count(*) from PROCEEDS where proceeds > 0) / (select count(*) from PROCEEDS) * 100) as avg";
         return jdbcTemplate.queryForObject(query, Double.class);
     }
 

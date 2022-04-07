@@ -11,10 +11,8 @@ import com.example.democoin.upbit.client.UpbitAllMarketClient;
 import com.example.democoin.upbit.client.UpbitAssetClient;
 import com.example.democoin.upbit.client.UpbitCandleClient;
 import com.example.democoin.upbit.client.UpbitOrderClient;
-import com.example.democoin.upbit.db.entity.FifteenMinutesCandle;
 import com.example.democoin.upbit.db.entity.FiveMinutesCandle;
 import com.example.democoin.upbit.db.entity.Orders;
-import com.example.democoin.upbit.db.repository.FifteenMinutesCandleRepository;
 import com.example.democoin.upbit.db.repository.FiveMinutesCandleRepository;
 import com.example.democoin.upbit.db.repository.OrdersRepository;
 import com.example.democoin.upbit.enums.MarketType;
@@ -78,9 +76,6 @@ class DemoCoinApplicationTests {
     private FiveMinutesCandleRepository fiveMinutesCandleRepository;
 
     @Autowired
-    private FifteenMinutesCandleRepository fifteenMinutesCandleRepository;
-
-    @Autowired
     private OrdersRepository ordersRepository;
 
     @Autowired
@@ -125,24 +120,15 @@ class DemoCoinApplicationTests {
             오늘_가장최근수집된일자_수집(MinuteType.FIVE, marketType);
             log.info("======= {} 종료 =====", marketType.getName());
         };
-        for (MarketType marketType : MarketType.marketTypeList) {
-            log.info("======= {} 시작 =====",marketType.getName());
-            오늘_가장최근수집된일자_수집(MinuteType.FIFTEEN, marketType);
-            log.info("======= {} 종료 =====", marketType.getName());
-        };
         log.info("======= 최근일자 수집 종료 =====");
 */
+
+
 /*
         log.info("======= 최초일자 수집 시작 =====");
         for (MarketType marketType : MarketType.marketTypeList) {
             log.info("======= {} 시작 =====",marketType.getName());
             오늘_최초캔들생성일자_수집(MinuteType.FIVE, marketType);
-            log.info("======= {} 종료 =====", marketType.getName());
-        }
-
-        for (MarketType marketType : MarketType.marketTypeList) {
-            log.info("======= {} 시작 =====",marketType.getName());
-            오늘_최초캔들생성일자_수집(MinuteType.FIFTEEN, marketType);
             log.info("======= {} 종료 =====", marketType.getName());
         }
 
@@ -160,7 +146,7 @@ class DemoCoinApplicationTests {
 //        BollingerBands bollingerBands = Indicator.getBollingerBands(prices);
 
 //        System.out.println();
-        backTesting2();
+//        backTesting2();
 
 //        List<FiveMinutesCandle> candles = fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(KRW_BTC.getType(), 1647146998423L);
 
@@ -196,14 +182,8 @@ class DemoCoinApplicationTests {
             size += minuteCandles.size();
             nextTo = minuteCandles.get(minuteCandles.size() - 1).getCandleDateTimeUtc();
             switch (minuteType) {
-                case FIVE:
-                    fiveMinutesCandleRepository.saveAll(minuteCandles.stream().map(FiveMinutesCandle::of).collect(Collectors.toUnmodifiableList()));
-                    break;
-                case FIFTEEN:
-                    fifteenMinutesCandleRepository.saveAll(minuteCandles.stream().map(FifteenMinutesCandle::of).collect(Collectors.toUnmodifiableList()));
-                    break;
-                default:
-                    throw new RuntimeException("There isn`t type : " + minuteType.name());
+                case FIVE -> fiveMinutesCandleRepository.saveAll(minuteCandles.stream().map(FiveMinutesCandle::of).toList());
+                default -> throw new RuntimeException("There isn`t type : " + minuteType.name());
             }
             long end = System.currentTimeMillis();
             System.out.printf("========== %s초 =========== 사이즈 : %s\r\n", (end - start) / 1000.0, size);
