@@ -2,26 +2,11 @@ package com.example.democoin.task;
 
 import com.example.democoin.slack.SlackMessageService;
 import com.example.democoin.task.service.ScheduleService;
-import com.example.democoin.upbit.client.UpbitAllMarketClient;
-import com.example.democoin.upbit.client.UpbitCandleClient;
 import com.example.democoin.upbit.enums.MarketType;
-import com.example.democoin.upbit.enums.MarketUnit;
 import com.example.democoin.upbit.enums.MinuteType;
-import com.example.democoin.upbit.result.candles.MinuteCandle;
-import com.example.democoin.upbit.result.market.MarketResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
-import static java.math.RoundingMode.HALF_EVEN;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -59,7 +44,7 @@ public class CoinTask {
             slackMessageService.scheduleErrorMessage("5분봉 수집 완료");
         }
     }
-
+/*
     @Autowired
     private UpbitCandleClient upbitCandleClient;
 
@@ -101,5 +86,5 @@ public class CoinTask {
             statistics.addValue(candle.getCandleAccTradeVolume());
         }
         return statistics.getStandardDeviation();
-    }
+    }*/
 }

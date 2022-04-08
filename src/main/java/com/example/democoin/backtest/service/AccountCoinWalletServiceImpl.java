@@ -66,7 +66,7 @@ public class AccountCoinWalletServiceImpl implements AccountCoinWalletService {
             return;
         }
 
-        double balance = rebalancingWallets.stream().mapToDouble(AccountCoinWallet::getBalance).sum() / wallets.size();
+        double balance = rebalancingWallets.stream().mapToDouble(AccountCoinWallet::getBalance).sum() / rebalancingWallets.size();
         rebalancingWallets.forEach(wallet -> wallet.rebalance(balance));
     }
 }

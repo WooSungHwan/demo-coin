@@ -36,7 +36,6 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
     @Transactional
     @Override
     public BackTestOrders bid(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason, RSIs rsIs) { // 매수
-        long start = System.currentTimeMillis();
         double openingPrice = targetCandle.getOpeningPrice();
         Double bidBalance = wallet.getBalance();
         double fee = fee(bidBalance);
@@ -50,18 +49,12 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
         accountCoinWalletRepository.save(wallet);
 
         log.info("{} 매수 발생 !! ---- 매수가 {}원 / 매수 볼륨 {}", targetCandle.getMarket(), df.format(openingPrice), volume);
-
-        long end = System.currentTimeMillis();
-        if (end - start >= 400) {
-            slackMessageService.backtestMessage(String.format("[slow query] bid [%s]", end - start));
-        }
         return order;
     }
 
     @Transactional
     @Override
     public BackTestOrders ask(FiveMinutesCandle targetCandle, AccountCoinWallet wallet, Reason reason, RSIs rsIs) { // 매도
-        long start = System.currentTimeMillis();
         if (wallet.isEmpty()) {
             return null;
         }
@@ -92,18 +85,12 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
         // 매도 -> 다음 캔들 시가에 매도
         wallet.allAsk(valAmount, fee);
         accountCoinWalletRepository.save(wallet);
-
-        long end = System.currentTimeMillis();
-        if (end - start >= 400) {
-            slackMessageService.backtestMessage(String.format("[slow query] ask [%s]", end - start));
-        }
         return order;
     }
 
     @Transactional
     @Override
     public BackTestOrders ask(FiveMinutesCandle targetCandle, WalletList walletList, Reason reason, RSIs rsIs) {
-        long start = System.currentTimeMillis();
         if (walletList.isEmpty()) {
             return null;
         }
@@ -138,10 +125,6 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
             wallet.allAsk(valAmount, fee);
         });
         accountCoinWalletRepository.saveAll(bidWallets);
-        long end = System.currentTimeMillis();
-        if (end - start >= 400) {
-            slackMessageService.backtestMessage(String.format("[slow query] ask [%s]", end - start));
-        }
         return order;
     }
 }

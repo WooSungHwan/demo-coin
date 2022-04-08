@@ -45,9 +45,11 @@ public class ResultInfo {
 
     @Override
     public String toString() {
-        return String.format("[%s - %s] 익절률 : %s, 코인별 수익정보 : %s"
+        return String.format("[%s - %s] 전략 : [ask: %s, bid: %s]익절률 : %s, 코인별 수익정보 : %s"
             , LocalDateTimeUtil.format(startDate)
             , LocalDateTimeUtil.format(endDate)
+            , askStrategy.name()
+            , bidStrategy.name()
             , positivePercent
             , coinResult
         );

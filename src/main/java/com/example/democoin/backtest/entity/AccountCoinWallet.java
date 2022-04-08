@@ -55,14 +55,6 @@ public class AccountCoinWallet {
     @Column(name = "max_proceed_rate")
     private Double maxProceedRate; // 최고 수익률
 
-    @Deprecated
-    public static AccountCoinWallet of(MarketType market, Double tradePrice, Double tradeVolume, Double allPrice, Double balance) {
-        double valAmount = tradePrice * tradeVolume;
-        double proceeds = valAmount - allPrice;
-        double proceedRate = proceeds / allPrice * 100;
-        return new AccountCoinWallet(null, market, tradePrice, tradeVolume, allPrice, proceeds, valAmount, proceedRate, balance, proceedRate);
-    }
-
     public static AccountCoinWallet of(MarketType market, Double balance) {
         return AccountCoinWallet.builder()
                 .market(market)

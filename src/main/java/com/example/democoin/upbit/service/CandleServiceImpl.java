@@ -22,56 +22,26 @@ public class CandleServiceImpl implements CandleService {
 
     @Override
     public List<FiveMinutesCandle> findFiveMinutesCandlesLimitOffset(String market, LocalDateTime of, int limit, int offset) {
-        long start = System.currentTimeMillis();
-        List<FiveMinutesCandle> result = fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(market, of, limit, offset);
-        long end = System.currentTimeMillis();
-        if (end - start >= 400) {
-            slackMessageService.backtestMessage(String.format("[slow query] findFiveMinutesCandlesLimitOffset [%s]", end - start));
-        }
-        return result;
+        return fiveMinutesCandleRepository.findFiveMinutesCandlesLimitOffset(market, of, limit, offset);
     }
 
     @Override
     public FiveMinutesCandle findFiveMinutesCandleByKst(String market, LocalDateTime targetDate) {
-        long start = System.currentTimeMillis();
-        FiveMinutesCandle result = fiveMinutesCandleRepository.findFiveMinutesCandleByKst(market, targetDate);
-        long end = System.currentTimeMillis();
-        if (end - start >= 400) {
-            slackMessageService.backtestMessage(String.format("[slow query] findFiveMinutesCandlesLimitOffset [%s]", end - start));
-        }
-        return result;
+        return fiveMinutesCandleRepository.findFiveMinutesCandleByKst(market, targetDate);
     }
 
     @Override
     public List<FiveMinutesCandle> findFiveMinutesCandlesUnderByTimestamp(String market, Long timestamp) {
-        long start = System.currentTimeMillis();
-        List<FiveMinutesCandle> result = fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(market, timestamp);
-        long end = System.currentTimeMillis();
-        if (end - start >= 400) {
-            slackMessageService.backtestMessage(String.format("[slow query] findFiveMinutesCandlesUnderByTimestamp [%s]", end - start));
-        }
-        return result;
+        return fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(market, timestamp);
     }
 
     @Override
     public FiveMinutesCandle nextCandle(Long timestamp, String market) {
-        long start = System.currentTimeMillis();
-        FiveMinutesCandle result = fiveMinutesCandleRepository.nextCandle(timestamp, market);
-        long end = System.currentTimeMillis();
-        if (end - start >= 400) {
-            slackMessageService.backtestMessage(String.format("[slow query] nextCandle [%s]", end - start));
-        }
-        return result;
+        return fiveMinutesCandleRepository.nextCandle(timestamp, market);
     }
 
     @Override
     public Double getFiveMinuteCandlesMA(FiveMinutesCandle candle, int limit) {
-        long start = System.currentTimeMillis();
-        Double result = fiveMinutesCandleRepository.getMA(candle.getMarket().getType(), candle.getCandleDateTimeKst(), limit);
-        long end = System.currentTimeMillis();
-        if (end - start >= 400) {
-            slackMessageService.backtestMessage(String.format("[slow query] getFiveMinuteCandlesMA [%s]", end - start));
-        }
-        return result;
+        return fiveMinutesCandleRepository.getMA(candle.getMarket().getType(), candle.getCandleDateTimeKst(), limit);
     }
 }

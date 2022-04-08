@@ -55,15 +55,14 @@ public class BackTest2 {
 
     double balance = 1000000.0; // 잔고
     public static final int BID_SLOT = 4;
-    public static final int STOP_LOSS = -2;
-//    public static final int TRACE_BID = -2;
+    public static int STOP_LOSS = -2;
 
     public void start() {
-        BidStrategy bidStrategy = BidStrategy.STRATEGY_3;
+        BidStrategy bidStrategy = BidStrategy.STRATEGY_16;
         AskStrategy askStrategy = AskStrategy.STRATEGY_3;
 
-        LocalDateTime startDate = LocalDateTime.of(2021, 11, 14, 0, 0, 0);
-        LocalDateTime endDate = LocalDateTime.of(2022, 3, 26, 0, 0, 0);
+        LocalDateTime startDate = LocalDateTime.of(2017, 10, 1, 0, 0, 0);
+        LocalDateTime endDate = LocalDateTime.of(2022, 4, 7, 0, 0, 0);
 
         backTestOrdersRepository.deleteAll();
         accountCoinWalletRepository.deleteAll();
@@ -105,16 +104,21 @@ public class BackTest2 {
                 List<Double> prices = candles.stream().map(FiveMinutesCandle::getTradePrice).toList();
                 RSIs rsi14 = IndicatorUtil.getRSI14(prices);
 
-                if (judgeMarketFlowType(MA50, MA100, MA150) == MarketFlowType.BEAR_MARKET) { // 베어마켓에서는 거래 안한다.
+                switch(judgeMarketFlowType(MA50, MA100, MA150)) {
+                    case BEAR_MARKET -> { // 베어마켓에서는 거래 안한다.
 //                        orderService.ask(targetCandle, walletList, BEAR_MARKET); // TODO 버그있음. 찾아야함.
-                    wallets.forEach(wallet -> orderService.ask(targetCandle, wallet, BEAR_MARKET, rsi14));
-                    log.info("====== {} 베어마켓 진행중 전량 매도 / 거래 중지 ======", market.getName());
-                    continue;
-                }
+                        wallets.forEach(wallet -> orderService.ask(targetCandle, wallet, BEAR_MARKET, rsi14));
+                        log.info("====== {} 베어마켓 진행중 전량 매도 / 거래 중지 ======", market.getName());
 
-                if (Objects.isNull(targetCandle)) {
-                    log.info("{} 해당 캔들에서 종료됨", baseCandle.getCandleDateTimeKst());
-                    return;
+                        // 리밸런싱
+                        accountCoinWalletService.rebalancing(market);
+                        continue;
+                    }
+                    case BULL_MARKET -> {
+                        bidStrategy = BidStrategy.STRATEGY_3;
+                        STOP_LOSS = -4;
+                    }
+                    case SIDEWAYS -> bidStrategy = BidStrategy.STRATEGY_16;
                 }
 
                 boolean isAskable = accountCoinWalletService.isAskable(walletList);
@@ -141,12 +145,7 @@ public class BackTest2 {
                     }
                 }
 
-                long start = System.currentTimeMillis();
                 List<AccountCoinWallet> fetchWallets = accountCoinWalletService.fetchWallet(market, targetCandle.getTradePrice());
-                long end = System.currentTimeMillis();
-                if (end - start >= 400) {
-                    slackMessageService.backtestMessage(String.format("[slow query] fetchWallet [%s]", end - start));
-                }
                 WalletList result = WalletList.of(fetchWallets);
                 printWalletInfo(result);
 
