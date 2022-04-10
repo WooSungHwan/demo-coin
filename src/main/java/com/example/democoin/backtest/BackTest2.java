@@ -58,10 +58,10 @@ public class BackTest2 {
     public static int STOP_LOSS = -2;
 
     public void start() {
-        BidStrategy bidStrategy = BidStrategy.STRATEGY_16;
+        BidStrategy bidStrategy = BidStrategy.STRATEGY_17;
         AskStrategy askStrategy = AskStrategy.STRATEGY_3;
 
-        LocalDateTime startDate = LocalDateTime.of(2017, 10, 1, 0, 0, 0);
+        LocalDateTime startDate = LocalDateTime.of(2021, 11, 14, 0, 0, 0);
         LocalDateTime endDate = LocalDateTime.of(2022, 4, 7, 0, 0, 0);
 
         backTestOrdersRepository.deleteAll();
@@ -118,7 +118,10 @@ public class BackTest2 {
                         bidStrategy = BidStrategy.STRATEGY_3;
                         STOP_LOSS = -4;
                     }
-                    case SIDEWAYS -> bidStrategy = BidStrategy.STRATEGY_16;
+                    case SIDEWAYS -> {
+                        bidStrategy = BidStrategy.STRATEGY_17;
+                        STOP_LOSS = -2;
+                    }
                 }
 
                 boolean isAskable = accountCoinWalletService.isAskable(walletList);
@@ -231,7 +234,7 @@ public class BackTest2 {
             case STRATEGY_16 -> // 5분봉 3틱 하락(개선2)
                     BackTestBidSignal.strategy_16(candles);
             case STRATEGY_17 -> // 5분봉 3틱 하락(개선3)
-                    BackTestBidSignal.strategy_17(candles);
+                    BackTestBidSignal.strategy_17(candles, rsi14);
             default -> NO_BID;
         };
     }

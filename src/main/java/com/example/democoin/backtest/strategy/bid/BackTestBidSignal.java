@@ -302,11 +302,11 @@ public class BackTestBidSignal {
         return NO_BID;
     }
 
-    public static BidReason strategy_17(List<FiveMinutesCandle> candles) {
-        Integer tick = countTickProcess3(candles);
+    public static BidReason strategy_17(List<FiveMinutesCandle> candles, RSIs rsIs) {
+        Integer tick = countTickProcess2(candles);
 
-        if (tick >= 3) {
-            return THREE_NEGATIVE_CANDLE_APPEAR_REPAIR_2;
+        if (tick >= 3 && rsIs.isOver(30)) {
+            return THREE_NEGATIVE_CANDLE_APPEAR_REPAIR_2_AND_RSI_OVER_30;
         }
 
         return NO_BID;

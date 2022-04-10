@@ -14,6 +14,8 @@ import javax.persistence.*;
 
 import java.time.LocalDateTime;
 
+import static com.example.democoin.upbit.enums.OrdSideType.ASK;
+import static com.example.democoin.upbit.enums.OrdSideType.BID;
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -65,15 +67,15 @@ public class BackTestOrders {
     @Column(name = "rsi")
     private Double rsi;
 
-    public static BackTestOrders askOf(MarketType market, OrdSideType side, Reason reason, Double price, Double volume, Double fee, long timestamp, Double proceeds, Double proceedRate, Double maxProceedRate
+    public static BackTestOrders askOf(MarketType market, Reason reason, Double price, Double volume, Double fee, long timestamp, Double proceeds, Double proceedRate, Double maxProceedRate
             , RSIs rsi) {
-        return new BackTestOrders(null, market, side, reason.getType(), price, volume, fee, LocalDateTime.now(), timestamp, proceeds, proceedRate, maxProceedRate
+        return new BackTestOrders(null, market, ASK, reason.getType(), price, volume, fee, LocalDateTime.now(), timestamp, proceeds, proceedRate, maxProceedRate
             , rsi.getRsi().get(0));
     }
 
-    public static BackTestOrders bidOf(MarketType market, OrdSideType side, Reason reason, Double price, Double volume, Double fee, long timestamp
+    public static BackTestOrders bidOf(MarketType market, Reason reason, Double price, Double volume, Double fee, long timestamp
             , RSIs rsi) {
-        return new BackTestOrders(null, market, side, reason.getType(), price, volume, fee, LocalDateTime.now(), timestamp, null, null, null
+        return new BackTestOrders(null, market, BID, reason.getType(), price, volume, fee, LocalDateTime.now(), timestamp, null, null, null
                 , rsi.getRsi().get(0));
     }
 

@@ -43,7 +43,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
         double volume = bidAmount / openingPrice; // 매수량
 
         // 다음 캔들 시가에 매수
-        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.bidOf(targetCandle.getMarket(), BID, reason, openingPrice, volume, fee, targetCandle.getTimestamp(), rsIs));
+        BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.bidOf(targetCandle.getMarket(), reason, openingPrice, volume, fee, targetCandle.getTimestamp(), rsIs));
 
         wallet.allBid(openingPrice, bidAmount, volume, fee);
         accountCoinWalletRepository.save(wallet);
@@ -73,7 +73,6 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
 
         BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.askOf(
                 wallet.getMarket(),
-                ASK,
                 reason,
                 targetCandle.getOpeningPrice(),
                 volume, fee, targetCandle.getTimestamp(),
@@ -110,7 +109,6 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
 
         BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.askOf(
                 walletList.getMarket(),
-                ASK,
                 reason,
                 targetCandle.getOpeningPrice(),
                 volume, fee, targetCandle.getTimestamp(),
