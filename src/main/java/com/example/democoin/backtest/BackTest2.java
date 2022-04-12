@@ -56,7 +56,7 @@ public class BackTest2 {
 
     double balance = 1000000.0; // 잔고
     public static final int BID_SLOT = 4;
-    public static int STOP_LOSS = -4;
+    public static int STOP_LOSS = -2;
 
     public void start() {
         BidStrategy bidStrategy = BidStrategy.STRATEGY_16;
@@ -122,11 +122,11 @@ public class BackTest2 {
                         continue;
                     }
                     case BULL_MARKET -> {
-//                        bidStrategy = BidStrategy.STRATEGY_3;
+                        bidStrategy = BidStrategy.STRATEGY_3;
 //                        STOP_LOSS = -4;
                     }
                     case SIDEWAYS -> {
-//                        bidStrategy = BidStrategy.STRATEGY_16;
+                        bidStrategy = BidStrategy.STRATEGY_16;
 //                        STOP_LOSS = -2;
                     }
                 }
