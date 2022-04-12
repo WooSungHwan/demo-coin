@@ -22,4 +22,9 @@ public class ResultInfoJdbcTemplate {
         return jdbcTemplate.queryForObject(query, Double.class);
     }
 
+    public Double getAsset() {
+        String query = "select sum(case when val_amount is null then balance else val_amount end) as sum from account_coin_wallet";
+        return jdbcTemplate.queryForObject(query, Double.class);
+    }
+
 }

@@ -55,6 +55,9 @@ public class AccountCoinWallet {
     @Column(name = "max_proceed_rate")
     private Double maxProceedRate; // 최고 수익률
 
+    @Column(name = "askable_position")
+    private Boolean askablePosition;
+
     public static AccountCoinWallet of(MarketType market, Double balance) {
         return AccountCoinWallet.builder()
                 .market(market)
@@ -111,36 +114,20 @@ public class AccountCoinWallet {
 
     public boolean isMaxProceedRateFall() {
         if (!isEmpty()) {
-            if (this.proceedRate < 3) {
-                return false;
-            }
-            if (this.maxProceedRate > 3) {
-                return this.maxProceedRate - 2 >= this.proceedRate;
-            }
+            return this.maxProceedRate - 2 >= this.proceedRate;
         }
         return false;
     }
 
-    public String getWalletInfo() {
-        return String.format("[%s] 평단가 : %s, 최대수익률 : %s%%, 수익률 : %s%%, 수익금 : %s, 평가금액 : %s"
-                , this.market.getName() // 코인 시장
-                , df.format(this.getAvgPrice()) // 평단가
-                , this.getMaxProceedRate() // 최대 수익률
-                , this.getProceedRate() // 수익률
-                , df.format(this.getProceeds())
-                , df.format(this.getValAmount())); // 잔고
+    public void setAskablePosition(Boolean askablePosition) {
+        this.askablePosition = askablePosition;
     }
 
     public void rebalance(Double balance) {
         this.balance = balance;
     }
 
-    private void setProceeds() {
-        this.proceeds = new BigDecimal(this.valAmount - this.allPrice).setScale(2, HALF_EVEN).doubleValue();
-        double proceedRate = new BigDecimal(this.proceeds / this.allPrice * 100).setScale(2, HALF_EVEN).doubleValue();
-        this.maxProceedRate = NumberUtils.max(this.proceedRate, proceedRate);
-        this.proceedRate = proceedRate;
-    }
+
 
     @Override
     public boolean equals(Object o) {

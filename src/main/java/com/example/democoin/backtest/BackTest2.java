@@ -1,8 +1,8 @@
 package com.example.democoin.backtest;
 
+import com.example.democoin.backtest.entity.ResultHistory;
 import com.example.democoin.backtest.entity.ResultInfo;
-import com.example.democoin.backtest.repository.ResultInfoJdbcTemplate;
-import com.example.democoin.backtest.repository.ResultInfoRepository;
+import com.example.democoin.backtest.repository.*;
 import com.example.democoin.backtest.service.AccountCoinWalletService;
 import com.example.democoin.backtest.strategy.BidSignalParams;
 import com.example.democoin.backtest.strategy.ask.AskReason;
@@ -14,8 +14,6 @@ import com.example.democoin.upbit.service.CandleService;
 import com.example.democoin.utils.IndicatorUtil;
 import com.example.democoin.indicator.result.RSIs;
 import com.example.democoin.backtest.entity.AccountCoinWallet;
-import com.example.democoin.backtest.repository.AccountCoinWalletRepository;
-import com.example.democoin.backtest.repository.BackTestOrdersRepository;
 import com.example.democoin.backtest.service.BackTestOrderService;
 import com.example.democoin.backtest.strategy.ask.AskStrategy;
 import com.example.democoin.backtest.strategy.ask.BackTestAskSignal;
@@ -28,12 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
 import static com.example.democoin.backtest.strategy.ask.AskReason.BEAR_MARKET;
 import static com.example.democoin.backtest.strategy.ask.AskReason.NO_ASK;
 import static com.example.democoin.backtest.strategy.bid.BidReason.NO_BID;
+import static com.example.democoin.backtest.strategy.bid.BidReason.TRADE_VOLUME_UP;
 
 /**
  * 분할매수 도입 안한 버전
@@ -52,16 +52,17 @@ public class BackTest2 {
     private final BackTestOrdersRepository backTestOrdersRepository;
     private final ResultInfoJdbcTemplate resultInfoJdbcTemplate;
     private final ResultInfoRepository resultInfoRepository;
+    private final ResultHistoryRepository resultHistoryRepository;
 
     double balance = 1000000.0; // 잔고
     public static final int BID_SLOT = 4;
-    public static int STOP_LOSS = -2;
+    public static int STOP_LOSS = -4;
 
     public void start() {
-        BidStrategy bidStrategy = BidStrategy.STRATEGY_17;
+        BidStrategy bidStrategy = BidStrategy.STRATEGY_16;
         AskStrategy askStrategy = AskStrategy.STRATEGY_3;
 
-        LocalDateTime startDate = LocalDateTime.of(2021, 11, 14, 0, 0, 0);
+        LocalDateTime startDate = LocalDateTime.of(2017, 10, 1, 0, 0, 0);
         LocalDateTime endDate = LocalDateTime.of(2022, 4, 7, 0, 0, 0);
 
         backTestOrdersRepository.deleteAll();
@@ -77,7 +78,6 @@ public class BackTest2 {
         boolean over = false;
         LocalDateTime targetDate = LocalDateTime.of(startDate.getYear(), startDate.getMonthValue(), startDate.getDayOfMonth(), 0, 0, 0);
         while (!over) {
-
             for (MarketType market : MarketType.marketTypeList) {
                 FiveMinutesCandle baseCandle = candleService.findFiveMinutesCandleByKst(market.getType(), targetDate);
                 if (Objects.isNull(baseCandle) || Objects.isNull(baseCandle.getTimestamp())) {
@@ -107,20 +107,27 @@ public class BackTest2 {
                 switch(judgeMarketFlowType(MA50, MA100, MA150)) {
                     case BEAR_MARKET -> { // 베어마켓에서는 거래 안한다.
 //                        orderService.ask(targetCandle, walletList, BEAR_MARKET); // TODO 버그있음. 찾아야함.
+                        /*if (walletList.isEmpty()) {
+                            double volumeAvg = candles.stream().mapToDouble(FiveMinutesCandle::getCandleAccTradeVolume).average().getAsDouble();
+                            Double volume = candles.get(0).getCandleAccTradeVolume();
+                            if (volume >= volumeAvg * 3) {
+                                orderService.bid(targetCandle, walletList.getBidableWallet(), TRADE_VOLUME_UP, rsi14);
+                                continue;
+                            }
+                        }*/
                         wallets.forEach(wallet -> orderService.ask(targetCandle, wallet, BEAR_MARKET, rsi14));
                         log.info("====== {} 베어마켓 진행중 전량 매도 / 거래 중지 ======", market.getName());
-
                         // 리밸런싱
-                        accountCoinWalletService.rebalancing(market);
+//                        accountCoinWalletService.rebalancing(market);
                         continue;
                     }
                     case BULL_MARKET -> {
-                        bidStrategy = BidStrategy.STRATEGY_3;
-                        STOP_LOSS = -4;
+//                        bidStrategy = BidStrategy.STRATEGY_3;
+//                        STOP_LOSS = -4;
                     }
                     case SIDEWAYS -> {
-                        bidStrategy = BidStrategy.STRATEGY_17;
-                        STOP_LOSS = -2;
+//                        bidStrategy = BidStrategy.STRATEGY_16;
+//                        STOP_LOSS = -2;
                     }
                 }
 
@@ -131,15 +138,15 @@ public class BackTest2 {
                     continue;
                 }
 
-                BollingerBands bollingerBands = IndicatorUtil.getBollingerBands(prices);
+//                BollingerBands bollingerBands = IndicatorUtil.getBollingerBands(prices);
 
                 if (isAskable) {
                     // 지갑들  매도
-                    askProcess(askStrategy, candles, targetCandle, walletList, bollingerBands, rsi14);
+                    askProcess(askStrategy, candles, targetCandle, walletList, null /*bollingerBands*/, rsi14);
                 }
 
                 if (isBidable) {
-                    BidSignalParams params = getBidSignalParams(bidStrategy, candles, targetCandle, bollingerBands, rsi14);
+                    BidSignalParams params = getBidSignalParams(bidStrategy, candles, targetCandle, null/*bollingerBands*/, rsi14);
                     BidReason bidReason = bidSignal(params);
                     if (bidReason.isBid()) {
                         log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
@@ -157,9 +164,19 @@ public class BackTest2 {
                     over = true;
                 }
             }
-            targetDate = targetDate.plusMinutes(5);
+
+            // 다음턴에 월이 바뀌면 현재 재산을 기록한다.
+            LocalDateTime nextDate = targetDate.plusMinutes(5);
+            if (nextDate.getMonthValue() != targetDate.getMonthValue()) {
+                ResultHistory resultHistory = ResultHistory.builder()
+                        .baseDate(nextDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                        .assets(resultInfoJdbcTemplate.getAsset())
+                        .build();
+                resultHistoryRepository.save(resultHistory);
+            }
+            targetDate = nextDate;
         }
-        saveResultInfo(bidStrategy, askStrategy, startDate, endDate);
+        saveResultInfo(bidStrategy, askStrategy, startDate, endDate, orderService.getOrderCount());
         log.info("===== 거래종료 =====");
     }
 
@@ -169,12 +186,11 @@ public class BackTest2 {
             if (askReason.isAsk()) { // 매도
                 log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
                 orderService.ask(targetCandle, wallet, askReason, rsi14);
-                log.info("{}% \r\n", targetCandle.getCandlePercent());
             }
         }
 
         // 리밸런싱
-        accountCoinWalletService.rebalancing(walletList.getMarket());
+//        accountCoinWalletService.rebalancing(walletList.getMarket());
     }
 
     private BidSignalParams getBidSignalParams(BidStrategy bidStrategy,
@@ -260,7 +276,11 @@ public class BackTest2 {
         };
     }
 
-    private void saveResultInfo(BidStrategy bidStrategy, AskStrategy askStrategy, LocalDateTime startDate, LocalDateTime endDate) {
+    private void saveResultInfo(BidStrategy bidStrategy,
+                                AskStrategy askStrategy,
+                                LocalDateTime startDate,
+                                LocalDateTime endDate,
+                                Integer orderCount) {
         ResultInfo resultInfo = ResultInfo.builder()
                 .askStrategy(askStrategy)
                 .bidStrategy(bidStrategy)
@@ -268,6 +288,7 @@ public class BackTest2 {
                 .positivePercent(resultInfoJdbcTemplate.getPositivePercent())
                 .startDate(startDate)
                 .endDate(endDate)
+                .orderCount(orderCount)
                 .build();
 
         resultInfoRepository.save(resultInfo);

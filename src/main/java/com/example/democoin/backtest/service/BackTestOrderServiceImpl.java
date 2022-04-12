@@ -125,4 +125,9 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
         accountCoinWalletRepository.saveAll(bidWallets);
         return order;
     }
+
+    @Override
+    public Integer getOrderCount() {
+        return (int) backTestOrdersRepository.count();
+    }
 }

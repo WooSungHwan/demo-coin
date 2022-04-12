@@ -21,7 +21,8 @@ public enum BidStrategy {
     STRATEGY_14("5분봉 3틱 하락(개선2), 볼린저 밴드 하단선 아래, 15분봉 rsi 40 이하"),
     STRATEGY_15("5분봉 3틱 하락(개선1)"),
     STRATEGY_16("5분봉 3틱 하락(개선2)"),
-    STRATEGY_17("5분봉 3틱 하락(개선2) / rsi 30 이상")
+    STRATEGY_17("5분봉 3틱 하락(개선2) / rsi 30 이상"),
+    STRATEGY_18("5분봉 3틱 하락(개선2) / 베어마켓시 거래량 200 이평보다 2배 이상 높은 경우 매수!")
     ;
 
     private String strategy;

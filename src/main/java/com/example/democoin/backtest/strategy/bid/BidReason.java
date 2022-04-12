@@ -31,8 +31,8 @@ public enum BidReason implements Reason {
     RSI_OVERING("RSI_OVERING", "RSI 지수 상향돌파"),
     THREE_NEGATIVE_CANDLE_APPEAR_AND_RSI_UNDER("THREE_NEGATIVE_CANDLE_APPEAR_AND_RSI_UNDER", "음봉 연속 3회 출현, RSI 지수 이하"),
     THREE_NEGATIVE_CANDLE_APPEAR_AND_RSI_UNDER_AND_BB_LDD_TOUCH("THREE_NEGATIVE_CANDLE_APPEAR_AND_RSI_UNDER_AND_BB_LDD_TOUCH", "음봉 3개 연속출현, RSI 지수 이하, 볼린저 밴드 하단 이하"),
-    FIVE_THREE_TICK_BB_LDD_TOUCH_FIF_RSI_UNDER("FIVE_THREE_TICK_BB_LDD_TOUCH_FIF_RSI_UNDER", "5분봉 3틱룰(개선2), 볼밴 하단선 터치, 15분봉 rsi 지수 이하")
-    ;
+    FIVE_THREE_TICK_BB_LDD_TOUCH_FIF_RSI_UNDER("FIVE_THREE_TICK_BB_LDD_TOUCH_FIF_RSI_UNDER", "5분봉 3틱룰(개선2), 볼밴 하단선 터치, 15분봉 rsi 지수 이하"),
+    TRADE_VOLUME_UP("TRADE_VOLUME_UP", "거래량 증가.");
 
     private String type;
     private String name;

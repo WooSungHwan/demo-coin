@@ -16,4 +16,5 @@ public interface BackTestOrderService {
 
     BackTestOrders ask(FiveMinutesCandle targetCandle, WalletList walletList, Reason reason, RSIs rsIs);
 
+    Integer getOrderCount();
 }
