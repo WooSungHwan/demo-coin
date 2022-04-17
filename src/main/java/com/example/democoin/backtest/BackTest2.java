@@ -54,7 +54,8 @@ public class BackTest2 {
     private final ResultInfoRepository resultInfoRepository;
     private final ResultHistoryRepository resultHistoryRepository;
 
-    double balance = 1000000.0; // 잔고
+    double balance = 1_000_000.0d; // 잔고
+    public double monthlyAddAmount = 100_000.0d; // 매월 추가입금 금액
     public static final int BID_SLOT = 4;
     public static int STOP_LOSS = -2;
 
@@ -62,8 +63,8 @@ public class BackTest2 {
         BidStrategy bidStrategy = BidStrategy.STRATEGY_16;
         AskStrategy askStrategy = AskStrategy.STRATEGY_3;
 
-        LocalDateTime startDate = LocalDateTime.of(2017, 10, 1, 0, 0, 0);
-        LocalDateTime endDate = LocalDateTime.of(2022, 4, 7, 0, 0, 0);
+        LocalDateTime startDate = LocalDateTime.of(2020, 4, 13, 21, 55, 0);
+        LocalDateTime endDate = LocalDateTime.of(2022, 4, 13, 21, 55, 0);
 
         backTestOrdersRepository.deleteAll();
         accountCoinWalletRepository.deleteAll();
@@ -76,6 +77,10 @@ public class BackTest2 {
         }
 
         boolean over = false;
+        int limit = 200;
+        int shorts = limit / 4;
+        int middles = limit / 2;
+        int longs = shorts + middles;
         LocalDateTime targetDate = LocalDateTime.of(startDate.getYear(), startDate.getMonthValue(), startDate.getDayOfMonth(), 0, 0, 0);
         while (!over) {
             for (MarketType market : MarketType.marketTypeList) {
@@ -84,10 +89,10 @@ public class BackTest2 {
                     continue;
                 }
 
-                List<FiveMinutesCandle> candles = candleService.findFiveMinutesCandlesUnderByTimestamp(market.getType(), baseCandle.getTimestamp());
+                List<FiveMinutesCandle> candles = candleService.findFiveMinutesCandlesUnderByTimestamp(market.getType(), baseCandle.getTimestamp(), limit);
 
-                if (candles.size() < 200) {
-                    log.info("해당 시간대는 캔들 200개 미만이므로 테스트할 수 없습니다. -- {}", baseCandle.getCandleDateTimeKst());
+                if (candles.size() < limit) {
+                    log.info("해당 시간대는 캔들 {}개 미만이므로 테스트할 수 없습니다. -- {}", limit, baseCandle.getCandleDateTimeKst());
                     continue;
                 }
 
@@ -97,38 +102,25 @@ public class BackTest2 {
                 List<AccountCoinWallet> wallets = accountCoinWalletRepository.findByMarket(market);
                 WalletList walletList = WalletList.of(wallets);
 
-                Double MA50 = candleService.getFiveMinuteCandlesMA(candles.get(50), 50);
-                Double MA100 = candleService.getFiveMinuteCandlesMA(candles.get(100), 100);
-                Double MA150 = candleService.getFiveMinuteCandlesMA(candles.get(150), 150);
+//                Double MA50 = candleService.getFiveMinuteCandlesMA(candles.get(50), 50);
+//                Double MA100 = candleService.getFiveMinuteCandlesMA(candles.get(100), 100);
+//                Double MA150 = candleService.getFiveMinuteCandlesMA(candles.get(150), 150);
+
+                Double shortsMA = candleService.getFiveMinuteCandlesMA(candles.get(shorts), shorts);
+                Double middlesMA = candleService.getFiveMinuteCandlesMA(candles.get(middles), middles);
+                Double longsMA = candleService.getFiveMinuteCandlesMA(candles.get(longs), longs);
 
                 List<Double> prices = candles.stream().map(FiveMinutesCandle::getTradePrice).toList();
                 RSIs rsi14 = IndicatorUtil.getRSI14(prices);
 
-                switch(judgeMarketFlowType(MA50, MA100, MA150)) {
+                switch(judgeMarketFlowType(shortsMA, middlesMA, longsMA)) {
                     case BEAR_MARKET -> { // 베어마켓에서는 거래 안한다.
-//                        orderService.ask(targetCandle, walletList, BEAR_MARKET); // TODO 버그있음. 찾아야함.
-                        /*if (walletList.isEmpty()) {
-                            double volumeAvg = candles.stream().mapToDouble(FiveMinutesCandle::getCandleAccTradeVolume).average().getAsDouble();
-                            Double volume = candles.get(0).getCandleAccTradeVolume();
-                            if (volume >= volumeAvg * 3) {
-                                orderService.bid(targetCandle, walletList.getBidableWallet(), TRADE_VOLUME_UP, rsi14);
-                                continue;
-                            }
-                        }*/
                         wallets.forEach(wallet -> orderService.ask(targetCandle, wallet, BEAR_MARKET, rsi14));
                         log.info("====== {} 베어마켓 진행중 전량 매도 / 거래 중지 ======", market.getName());
-                        // 리밸런싱
-//                        accountCoinWalletService.rebalancing(market);
                         continue;
                     }
-                    case BULL_MARKET -> {
-                        bidStrategy = BidStrategy.STRATEGY_3;
-//                        STOP_LOSS = -4;
-                    }
-                    case SIDEWAYS -> {
-                        bidStrategy = BidStrategy.STRATEGY_16;
-//                        STOP_LOSS = -2;
-                    }
+                    case BULL_MARKET -> bidStrategy = BidStrategy.STRATEGY_3;
+                    case SIDEWAYS -> bidStrategy = BidStrategy.STRATEGY_16;
                 }
 
                 boolean isAskable = accountCoinWalletService.isAskable(walletList);
@@ -165,7 +157,7 @@ public class BackTest2 {
                 }
             }
 
-            // 다음턴에 월이 바뀌면 현재 재산을 기록한다.
+            // 다음턴에 월이 바뀌면 현재 재산을 기록한다. && 추가 예산을 반영한다.
             LocalDateTime nextDate = targetDate.plusMinutes(5);
             if (nextDate.getMonthValue() != targetDate.getMonthValue()) {
                 ResultHistory resultHistory = ResultHistory.builder()
@@ -173,7 +165,11 @@ public class BackTest2 {
                         .assets(resultInfoJdbcTemplate.getAsset())
                         .build();
                 resultHistoryRepository.save(resultHistory);
+
+                // 추가입금 반영
+                accountCoinWalletService.addMonthlyAmount(monthlyAddAmount);
             }
+
             targetDate = nextDate;
         }
         saveResultInfo(bidStrategy, askStrategy, startDate, endDate, orderService.getOrderCount());
@@ -182,7 +178,7 @@ public class BackTest2 {
 
     private void askProcess(AskStrategy askStrategy, List<FiveMinutesCandle> candles, FiveMinutesCandle targetCandle, WalletList walletList, BollingerBands bollingerBands, RSIs rsi14) {
         for (AccountCoinWallet wallet : walletList.getAskableWallets()) {
-            AskReason askReason = askSignal(askStrategy, bollingerBands, rsi14, candles, wallet);
+            AskReason askReason = askSignal(askStrategy, bollingerBands, rsi14, candles, wallet, targetCandle);
             if (askReason.isAsk()) { // 매도
                 log.info("{} 현재 캔들", targetCandle.getCandleDateTimeKst());
                 orderService.ask(targetCandle, wallet, askReason, rsi14);
@@ -255,7 +251,7 @@ public class BackTest2 {
         };
     }
 
-    private AskReason askSignal(AskStrategy askStrategy, BollingerBands bollingerBands, RSIs rsi14, List<FiveMinutesCandle> candles, AccountCoinWallet wallet) {
+    private AskReason askSignal(AskStrategy askStrategy, BollingerBands bollingerBands, RSIs rsi14, List<FiveMinutesCandle> candles, AccountCoinWallet wallet, FiveMinutesCandle targetCandle) {
         return switch (askStrategy) {
             case STRATEGY_1 -> BackTestAskSignal.strategy_1(wallet, rsi14, bollingerBands, candles.get(0));
             case STRATEGY_2 -> BackTestAskSignal.strategy_2(wallet, bollingerBands, candles.get(0));
@@ -270,8 +266,7 @@ public class BackTest2 {
                     BackTestAskSignal.strategy_9(wallet, bollingerBands, rsi14, candles, candles.get(0));
             case STRATEGY_10 -> // rsi 50 이상
                     BackTestAskSignal.strategy_10(wallet, rsi14, candles.get(0));
-//            case STRATEGY_11: //
-//                return BackTestAskSignal.strategy_11();
+            case STRATEGY_11 -> BackTestAskSignal.strategy_11(wallet, candles, targetCandle);
             default -> NO_ASK;
         };
     }

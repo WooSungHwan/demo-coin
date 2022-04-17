@@ -16,4 +16,6 @@ public interface AccountCoinWalletService {
     List<AccountCoinWallet> getWalletByMarket(MarketType market);
 
     void rebalancing(MarketType market);
+
+    void addMonthlyAmount(double monthlyAddAmount);
 }

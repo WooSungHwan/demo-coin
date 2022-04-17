@@ -42,9 +42,10 @@ public interface FiveMinutesCandleRepository extends JpaRepository<FiveMinutesCa
      * @param timestamp
      * @return
      */
-    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE market = :market AND timestamp <= :timestamp ORDER BY timestamp DESC LIMIT 200")
+    @Query(nativeQuery = true, value = "SELECT * FROM five_minutes_candle WHERE market = :market AND timestamp <= :timestamp ORDER BY timestamp DESC LIMIT :limit")
     List<FiveMinutesCandle> findFiveMinutesCandlesUnderByTimestamp(@Param("market") String market,
-                                                                   @Param("timestamp") long timestamp);
+                                                                   @Param("timestamp") long timestamp,
+                                                                   @Param("limit") int limit);
 
     /**
      * 해당 timestamp값의 다음 캔들을 가져온다.

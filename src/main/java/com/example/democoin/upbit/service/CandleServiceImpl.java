@@ -31,8 +31,8 @@ public class CandleServiceImpl implements CandleService {
     }
 
     @Override
-    public List<FiveMinutesCandle> findFiveMinutesCandlesUnderByTimestamp(String market, Long timestamp) {
-        return fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(market, timestamp);
+    public List<FiveMinutesCandle> findFiveMinutesCandlesUnderByTimestamp(String market, Long timestamp, int limit) {
+        return fiveMinutesCandleRepository.findFiveMinutesCandlesUnderByTimestamp(market, timestamp, limit);
     }
 
     @Override

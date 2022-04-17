@@ -113,13 +113,13 @@ class DemoCoinApplicationTests {
 //        List<OrderResult> orderList = 주문목록조회();
 //        주문취소(orderList.get(0).getUuid());
 
-        /*log.info("======= 최근일자 수집 시작 =====");
+        log.info("======= 최근일자 수집 시작 =====");
         for (MarketType marketType : MarketType.marketTypeList) {
             log.info("======= {} 시작 =====",marketType.getName());
             오늘_가장최근수집된일자_수집(MinuteType.FIVE, marketType);
             log.info("======= {} 종료 =====", marketType.getName());
         };
-        log.info("======= 최근일자 수집 종료 =====");*/
+        log.info("======= 최근일자 수집 종료 =====");
 
 
 /*

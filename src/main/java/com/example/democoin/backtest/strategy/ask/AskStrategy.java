@@ -16,7 +16,7 @@ public enum AskStrategy {
     STRATEGY_8("볼린저밴드 하단선 확장 감소 추세 또는 rsi 70 이상"),
     STRATEGY_9("볼린저 밴드 상한선 하향돌파 또는 rsi 70 하향돌파"),
     STRATEGY_10("rsi 50 이상"),
-    STRATEGY_11("단순 5분봉 3틱 수익 손절매(-5% 손절, -2% 추매 / 베어 마켓시 익절)")
+    STRATEGY_11("STRATEGY_3 / 한시간 이상 전고점 못넘으면 매도.")
     ;
 
     private String strategy;

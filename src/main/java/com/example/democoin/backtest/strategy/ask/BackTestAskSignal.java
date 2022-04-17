@@ -213,4 +213,20 @@ public class BackTestAskSignal {
 
         return NO_ASK;
     }
+
+    // 최대 수익률 부근에서 1시간 이상 딜레이
+    public static AskReason strategy_11(AccountCoinWallet wallet,
+                                        List<FiveMinutesCandle> candles,
+                                        FiveMinutesCandle targetCandle) {
+        AskReason walletPercentReason = isWalletPercent(wallet, candles.get(0));
+        if (walletPercentReason != NO_ASK) return walletPercentReason;
+
+        if (wallet.getBidTime().plusHours(1).isBefore(targetCandle.getCandleDateTimeUtc())
+            && wallet.getProceeds() >= 0
+            && wallet.getMaxProceedRate() - wallet.getProceedRate() >= 0) {
+            return MAX_RATE_DELAY;
+        }
+
+        return NO_ASK;
+    }
 }

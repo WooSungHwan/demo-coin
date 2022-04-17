@@ -13,6 +13,8 @@ import org.springframework.util.CollectionUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.example.democoin.backtest.BackTest2.BID_SLOT;
+
 @Transactional(readOnly = true)
 @Slf4j
 @RequiredArgsConstructor
@@ -68,5 +70,14 @@ public class AccountCoinWalletServiceImpl implements AccountCoinWalletService {
 
         double balance = rebalancingWallets.stream().mapToDouble(AccountCoinWallet::getBalance).sum() / rebalancingWallets.size();
         rebalancingWallets.forEach(wallet -> wallet.rebalance(balance));
+    }
+
+    @Transactional
+    @Override
+    public void addMonthlyAmount(double monthlyAddAmount) {
+        for (MarketType market : MarketType.marketTypeList) {
+            List<AccountCoinWallet> wallets = accountCoinWalletRepository.findByMarket(market);
+            wallets.forEach(wallet -> wallet.addAmount(monthlyAddAmount * market.getPercent() / BID_SLOT));
+        }
     }
 }

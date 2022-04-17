@@ -12,7 +12,8 @@ public interface CandleService {
                                                               int offset);
 
     List<FiveMinutesCandle> findFiveMinutesCandlesUnderByTimestamp(String market,
-                                                                   Long timestamp);
+                                                                   Long timestamp,
+                                                                   int limit);
 
     FiveMinutesCandle nextCandle(Long timestamp,
                                  String market);

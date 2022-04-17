@@ -45,7 +45,7 @@ public class BackTestOrderServiceImpl implements BackTestOrderService {
         // 다음 캔들 시가에 매수
         BackTestOrders order = backTestOrdersRepository.save(BackTestOrders.bidOf(targetCandle.getMarket(), reason, openingPrice, volume, fee, targetCandle.getTimestamp(), rsIs));
 
-        wallet.allBid(openingPrice, bidAmount, volume, fee);
+        wallet.allBid(openingPrice, bidAmount, volume, fee, targetCandle.getCandleDateTimeUtc());
         accountCoinWalletRepository.save(wallet);
 
         log.info("{} 매수 발생 !! ---- 매수가 {}원 / 매수 볼륨 {}", targetCandle.getMarket(), df.format(openingPrice), volume);

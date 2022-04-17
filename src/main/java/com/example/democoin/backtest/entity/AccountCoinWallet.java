@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import static com.example.democoin.DemoCoinApplication.df;
@@ -55,8 +56,8 @@ public class AccountCoinWallet {
     @Column(name = "max_proceed_rate")
     private Double maxProceedRate; // 최고 수익률
 
-    @Column(name = "askable_position")
-    private Boolean askablePosition;
+    @Column(name = "bid_time")
+    private LocalDateTime bidTime; // 매수캔들시간(utc)
 
     public static AccountCoinWallet of(MarketType market, Double balance) {
         return AccountCoinWallet.builder()
@@ -66,7 +67,7 @@ public class AccountCoinWallet {
     }
 
     public void allAsk(double valAmount, double fee) {
-        this.balance = valAmount - fee;
+        this.balance += (valAmount - fee);
         this.avgPrice = null;
         this.volume = null;
         this.allPrice = null;
@@ -74,20 +75,21 @@ public class AccountCoinWallet {
         this.valAmount = null;
         this.proceedRate = null;
         this.maxProceedRate = null;
+        this.bidTime = null;
     }
 
-    public void allBid(double tradePrice, double bidAmount, double volume, double fee) {
+    public void allBid(double tradePrice, double bidAmount, double volume, double fee, LocalDateTime bidTime) {
         this.avgPrice = tradePrice;
         this.volume = volume;
         this.allPrice = bidAmount - fee;
         this.valAmount = bidAmount - fee;
         this.balance = 0d;
+        this.bidTime = bidTime; // utc
 
         this.proceeds = this.valAmount - this.allPrice;
         double proceedRate = this.proceeds / this.allPrice * 100;
         this.maxProceedRate = NumberUtils.max(this.maxProceedRate, proceedRate);
         this.proceedRate = proceedRate;
-
 //        setProceeds();
     }
 
@@ -114,20 +116,27 @@ public class AccountCoinWallet {
 
     public boolean isMaxProceedRateFall() {
         if (!isEmpty()) {
-            return this.maxProceedRate - 2 >= this.proceedRate;
+            if (this.proceedRate < 3) {
+                return false;
+            }
+            if (this.maxProceedRate >= 3) {
+                return this.maxProceedRate - 2 >= this.proceedRate;
+            }
         }
         return false;
-    }
-
-    public void setAskablePosition(Boolean askablePosition) {
-        this.askablePosition = askablePosition;
     }
 
     public void rebalance(Double balance) {
         this.balance = balance;
     }
 
-
+    public void addAmount(double amount) {
+        if (this.balance != null) {
+            this.balance += amount;
+        } else {
+            this.balance = amount;
+        }
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -145,6 +154,7 @@ public class AccountCoinWallet {
         if (valAmount != null ? !valAmount.equals(that.valAmount) : that.valAmount != null) return false;
         if (proceedRate != null ? !proceedRate.equals(that.proceedRate) : that.proceedRate != null) return false;
         if (balance != null ? !balance.equals(that.balance) : that.balance != null) return false;
+        if (bidTime != null ? !bidTime.equals(that.bidTime) : that.bidTime != null) return false;
         return maxProceedRate != null ? maxProceedRate.equals(that.maxProceedRate) : that.maxProceedRate == null;
     }
 
@@ -160,6 +170,7 @@ public class AccountCoinWallet {
         result = 31 * result + (proceedRate != null ? proceedRate.hashCode() : 0);
         result = 31 * result + (balance != null ? balance.hashCode() : 0);
         result = 31 * result + (maxProceedRate != null ? maxProceedRate.hashCode() : 0);
+        result = 31 * result + (bidTime != null ? bidTime.hashCode() : 0);
         return result;
     }
 }

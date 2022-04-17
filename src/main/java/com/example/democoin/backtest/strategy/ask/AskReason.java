@@ -24,7 +24,8 @@ public enum AskReason implements Reason {
     SMA5_SMA10_DEAD_CROSS("SMA5_SMA10_DEAD_CROSS", "5 이평선과 10 이평선의 데드크로스"),
     BB_UDD_UNDERING("BB_UDD_UNDERING", "볼린저 밴드 하단선 하향돌파"),
     RSI_UNDERING("RSI_UNDERING", "RSI 지수 하향돌파"),
-    BB_UDD_TOUCH("BB_UDD_TOUCH", "볼린저 밴드 상단 터치")
+    BB_UDD_TOUCH("BB_UDD_TOUCH", "볼린저 밴드 상단 터치"),
+    MAX_RATE_DELAY("MAX_RATE_DELAY", "최대 수익률 근처에서 딜레이")
     ;
 
     private String type;
